@@ -3,7 +3,7 @@ import { motion, useMotionValue, useTransform } from 'framer-motion';
 import { Check, Plus, Award, Zap, Trash2 } from 'lucide-react';
 import TeamSelector from './TeamSelector';
 import TeamLogo from './TeamLogo';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 
 export default function PollsPage({ onPollClick }) {
   const [polls, setPolls] = useState([]);
@@ -174,7 +174,7 @@ export default function PollsPage({ onPollClick }) {
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="bg-gradient-to-br from-slate-600 to-rose-500 rounded-2xl p-4 shadow-lg text-white"
+        className="bg-gradient-to-br from-teal-500 via-cyan-500 to-sky-500 dark:from-teal-600 dark:via-cyan-600 dark:to-sky-600 rounded-2xl p-4 shadow-lg dark:shadow-teal-500/20 text-white"
       >
         {!showCreate ? (
           <button
@@ -239,7 +239,7 @@ export default function PollsPage({ onPollClick }) {
                 whileTap={{ scale: 0.95 }}
                 onClick={handleCreatePoll}
                 disabled={!newPollQuestion.trim() || newPollOptions.filter(o => o.trim()).length < 2}
-                className="px-4 py-2 bg-white text-slate-600 rounded-full disabled:opacity-50"
+                className="px-4 py-2 bg-white text-teal-600 rounded-full disabled:opacity-50"
               >
                 만들기
               </motion.button>
@@ -330,14 +330,14 @@ function PollCard({ poll, index, onVote, onDelete, isSelected, onPollClick }) {
         onDragStart={() => setIsDragging(true)}
         onDragEnd={handleDragEnd}
         style={{ x, opacity }}
-        className={`bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-lg transition-all ${isMyPoll ? 'cursor-grab active:cursor-grabbing' : ''} ${isSelected ? 'ring-2 ring-slate-500' : ''}`}
+        className={`glass-card rounded-2xl p-4 transition-all border border-teal-100/50 dark:border-teal-400/20 ${isMyPoll ? 'cursor-grab active:cursor-grabbing' : ''} ${isSelected ? 'ring-2 ring-teal-500' : ''}`}
       >
         {/* 작성자 */}
         <div className="flex items-center gap-3 mb-4">
           <img
             src={poll.avatar}
             alt={poll.author}
-            className="w-10 h-10 rounded-full"
+            className="w-10 h-10 rounded-full ring-2 ring-teal-200 dark:ring-teal-400/30"
           />
           <div className="flex-1">
             <div className="text-gray-900 dark:text-gray-100">{poll.author}</div>
@@ -377,7 +377,7 @@ function PollCard({ poll, index, onVote, onDelete, isSelected, onPollClick }) {
               onClick={() => onVote(poll.id, option.id)}
               className={`w-full text-left p-3 rounded-xl border-2 transition-all relative overflow-hidden ${
                 isSelected
-                  ? 'border-purple-600 dark:border-purple-500 shadow-lg'
+                  ? 'border-teal-600 dark:border-teal-400 shadow-lg'
                   : 'border-gray-200 dark:border-gray-700'
               }`}
             >
@@ -391,8 +391,8 @@ function PollCard({ poll, index, onVote, onDelete, isSelected, onPollClick }) {
                 }}
                 className={`absolute inset-0 ${
                   isWinning
-                    ? 'bg-gradient-to-r from-slate-200 to-rose-200 dark:from-slate-900/50 dark:to-rose-900/50'
-                    : 'bg-slate-100 dark:bg-slate-900/30'
+                    ? 'bg-gradient-to-r from-teal-200 to-cyan-200 dark:from-teal-900/50 dark:to-cyan-900/50'
+                    : 'bg-teal-100 dark:bg-teal-900/30'
                 }`}
               />
               <div className="relative flex items-center justify-between">
@@ -404,7 +404,7 @@ function PollCard({ poll, index, onVote, onDelete, isSelected, onPollClick }) {
                       animate={{ scale: 1, rotate: 0 }}
                       transition={{ type: 'spring' }}
                     >
-                      <Check className="w-4 h-4 text-slate-600 dark:text-slate-400" />
+                      <Check className="w-4 h-4 text-teal-600 dark:text-teal-400" />
                     </motion.div>
                   )}
                   {isWinning && poll.totalVotes > 0 && (

@@ -53,7 +53,7 @@ export default function TeamSelector({ selectedTeam, onSelectTeam, showAll = tru
                 </button>
               )}
               
-              <div className="max-h-80 overflow-y-auto">
+              <div className="max-h-80 overflow-y-auto pr-2 scrollbar-liquid-glass">
                 {KBO_TEAMS.map((team) => (
                   <motion.button
                     key={team.id}

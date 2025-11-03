@@ -6,7 +6,7 @@ import Confetti from './Confetti';
 import TeamSelector from './TeamSelector';
 import TeamLogo from './TeamLogo';
 import TeamAvatar from './TeamAvatar';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 
 export default function FeedPage({ onPostClick }) {
   const [posts, setPosts] = useState([]);
@@ -201,7 +201,7 @@ export default function FeedPage({ onPostClick }) {
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm"
+        className="glass-card rounded-2xl p-4"
       >
         {!showCreatePost ? (
           <motion.button
@@ -317,7 +317,7 @@ function PostCard({ post, index, onLike, onDelete, onEdit, isEditing, editConten
       initial={{ opacity: 0, y: 50 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.1 }}
-      className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm hover:shadow-lg transition-all overflow-hidden cursor-pointer"
+      className="glass-card glass-card-hover rounded-2xl overflow-hidden cursor-pointer"
       onClick={handleCardClick}
     >
       <div className="p-4">
@@ -448,8 +448,20 @@ function PostCard({ post, index, onLike, onDelete, onEdit, isEditing, editConten
                   if (navigator.share) {
                     navigator.share({ title: 'KBO 팬덤', text: shareText }).catch(() => {});
                   } else {
-                    navigator.clipboard.writeText(shareText);
-                    toast.success('링크가 복사되었습니다!');
+                    try {
+                      // Fallback for clipboard
+                      const textArea = document.createElement('textarea');
+                      textArea.value = shareText;
+                      textArea.style.position = 'fixed';
+                      textArea.style.left = '-999999px';
+                      document.body.appendChild(textArea);
+                      textArea.select();
+                      document.execCommand('copy');
+                      document.body.removeChild(textArea);
+                      toast.success('링크가 복사되었습니다!');
+                    } catch (err) {
+                      toast.error('복사에 실패했습니다');
+                    }
                   }
                 }}
                 className="flex items-center gap-2 text-gray-600 dark:text-gray-400 ml-auto active:scale-95 transition-all"

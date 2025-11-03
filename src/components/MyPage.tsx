@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Edit2, Settings, LogOut, Award, Zap, Heart, Bell, MessageCircle, TrendingUp, UserPlus, X, Camera, Check } from 'lucide-react';
+import { Edit2, Settings, LogOut, Award, Zap, Heart, Bell, MessageCircle, TrendingUp, UserPlus, X, Camera, Check, ChevronDown } from 'lucide-react';
 import TeamAvatar from './TeamAvatar';
 import { KBO_TEAMS } from '../constants/teams';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 
 export default function MyPage({ user, onLogout, onUpdateUser }) {
   const [notifications, setNotifications] = useState([]);
@@ -52,22 +52,22 @@ export default function MyPage({ user, onLogout, onUpdateUser }) {
   }, []);
 
   const stats = [
-    { label: '게시글', value: 12, icon: Edit2, color: 'from-slate-500 to-slate-600' },
-    { label: '좋아요', value: 234, icon: Heart, color: 'from-rose-400 to-rose-600' },
-    { label: '댓글', value: 89, icon: Award, color: 'from-amber-400 to-amber-600' },
+    { label: '게시글', value: 12, icon: Edit2, color: 'from-teal-500 to-cyan-600' },
+    { label: '좋아요', value: 234, icon: Heart, color: 'from-cyan-400 to-sky-600' },
+    { label: '댓글', value: 89, icon: Award, color: 'from-teal-400 to-cyan-600' },
   ];
 
   const getIcon = (type) => {
     const iconProps = { className: "w-5 h-5" };
     switch (type) {
       case 'like':
-        return <Heart {...iconProps} className="w-5 h-5 text-rose-500" fill="currentColor" />;
+        return <Heart {...iconProps} className="w-5 h-5 text-cyan-500" fill="currentColor" />;
       case 'comment':
-        return <MessageCircle {...iconProps} className="w-5 h-5 text-slate-600" />;
+        return <MessageCircle {...iconProps} className="w-5 h-5 text-teal-600" />;
       case 'poll':
-        return <TrendingUp {...iconProps} className="w-5 h-5 text-amber-500" />;
+        return <TrendingUp {...iconProps} className="w-5 h-5 text-sky-500" />;
       case 'follow':
-        return <UserPlus {...iconProps} className="w-5 h-5 text-green-600" />;
+        return <UserPlus {...iconProps} className="w-5 h-5 text-teal-600" />;
       default:
         return null;
     }
@@ -134,12 +134,12 @@ export default function MyPage({ user, onLogout, onUpdateUser }) {
   return (
     <div className="p-4 space-y-4">
       {/* 탭 전환 */}
-      <div className="flex gap-2 bg-white dark:bg-gray-800 rounded-2xl p-2 shadow-sm">
+      <div className="flex gap-2 bg-white dark:bg-slate-800 rounded-2xl p-2 shadow-sm border border-teal-100 dark:border-teal-400/20">
         <button
           onClick={() => setActiveSection('profile')}
           className={`flex-1 py-3 rounded-xl transition-all text-center ${
             activeSection === 'profile'
-              ? 'bg-slate-600 text-white'
+              ? 'bg-gradient-to-r from-teal-500 to-cyan-500 text-white'
               : 'text-gray-600 dark:text-gray-400'
           }`}
         >
@@ -149,7 +149,7 @@ export default function MyPage({ user, onLogout, onUpdateUser }) {
           onClick={() => setActiveSection('notifications')}
           className={`flex-1 py-3 rounded-xl transition-all relative text-center ${
             activeSection === 'notifications'
-              ? 'bg-slate-600 text-white'
+              ? 'bg-gradient-to-r from-teal-500 to-cyan-500 text-white'
               : 'text-gray-600 dark:text-gray-400'
           }`}
         >
@@ -173,7 +173,7 @@ export default function MyPage({ user, onLogout, onUpdateUser }) {
           >
             {/* 프로필 카드 */}
             <div 
-              className={`bg-gradient-to-br ${user?.team?.lightGradient || 'from-slate-700 via-rose-500 to-slate-800'} rounded-2xl p-6 text-white shadow-2xl`}
+              className="bg-gradient-to-br from-teal-500 via-cyan-500 to-sky-600 rounded-2xl p-6 text-white shadow-2xl"
             >
               <div className="flex flex-col items-center">
                 {isEditingProfile ? (
@@ -184,7 +184,7 @@ export default function MyPage({ user, onLogout, onUpdateUser }) {
                       size="xl"
                       className="border-4 border-white"
                     />
-                    <label className="absolute bottom-0 right-0 bg-white text-slate-700 rounded-full p-2 cursor-pointer hover:bg-gray-100 transition-colors">
+                    <label className="absolute bottom-0 right-0 bg-white text-teal-700 rounded-full p-2 cursor-pointer hover:bg-teal-50 transition-colors">
                       <Camera className="w-4 h-4" />
                       <input
                         type="file"
@@ -209,20 +209,23 @@ export default function MyPage({ user, onLogout, onUpdateUser }) {
                 {isEditingProfile ? (
                   <div className="mt-3 w-full max-w-xs">
                     <label className="block text-white/80 text-sm mb-2">응원 구단</label>
-                    <select
-                      value={editedUser?.team?.id || ''}
-                      onChange={(e) => {
-                        const selectedTeam = KBO_TEAMS.find(t => t.id === e.target.value);
-                        setEditedUser({ ...editedUser, team: selectedTeam });
-                      }}
-                      className="w-full bg-white/20 text-white rounded-xl px-4 py-2 border border-white/30 focus:outline-none focus:ring-2 focus:ring-white/50"
-                    >
-                      {KBO_TEAMS.map(team => (
-                        <option key={team.id} value={team.id} className="text-gray-900">
-                          {team.emoji} {team.name}
-                        </option>
-                      ))}
-                    </select>
+                    <div className="relative">
+                      <select
+                        value={editedUser?.team?.id || ''}
+                        onChange={(e) => {
+                          const selectedTeam = KBO_TEAMS.find(t => t.id === e.target.value);
+                          setEditedUser({ ...editedUser, team: selectedTeam });
+                        }}
+                        className="w-full bg-white/20 text-white rounded-xl pl-4 pr-10 py-2 border border-white/30 focus:outline-none focus:ring-2 focus:ring-white/50 appearance-none"
+                      >
+                        {KBO_TEAMS.map(team => (
+                          <option key={team.id} value={team.id} className="text-gray-900">
+                            {team.emoji} {team.name}
+                          </option>
+                        ))}
+                      </select>
+                      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/70 pointer-events-none" />
+                    </div>
                   </div>
                 ) : user?.team && (
                   <div className="mt-3 bg-white/20 backdrop-blur-sm rounded-full px-4 py-2 flex items-center gap-2">
@@ -253,7 +256,7 @@ export default function MyPage({ user, onLogout, onUpdateUser }) {
                       <motion.button
                         whileTap={{ scale: 0.95 }}
                         onClick={handleSaveProfile}
-                        className="px-4 py-2 bg-white hover:bg-white/90 text-slate-700 rounded-xl transition-colors flex items-center gap-2"
+                        className="px-4 py-2 bg-white hover:bg-white/90 text-teal-700 rounded-xl transition-colors flex items-center gap-2"
                       >
                         <Check className="w-4 h-4" />
                         저장
@@ -294,22 +297,22 @@ export default function MyPage({ user, onLogout, onUpdateUser }) {
             </div>
 
             {/* 메뉴 */}
-            <div className="bg-white dark:bg-gray-800 rounded-2xl overflow-hidden shadow-sm">
-              <button className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all border-b border-gray-100 dark:border-gray-700">
-                <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center">
-                  <Edit2 className="w-5 h-5 text-slate-600 dark:text-slate-400" />
+            <div className="glass-card rounded-2xl overflow-hidden border border-teal-100/50 dark:border-teal-400/20">
+              <button className="w-full flex items-center gap-3 px-4 py-3 hover:bg-teal-50 dark:hover:bg-teal-900/20 transition-all border-b border-gray-100 dark:border-gray-700">
+                <div className="w-10 h-10 rounded-full bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center">
+                  <Edit2 className="w-5 h-5 text-teal-600 dark:text-teal-400" />
                 </div>
                 <span className="text-gray-900 dark:text-gray-100">프로필 수정</span>
               </button>
-              <button className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all border-b border-gray-100 dark:border-gray-700">
-                <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center">
-                  <Settings className="w-5 h-5 text-slate-600 dark:text-slate-400" />
+              <button className="w-full flex items-center gap-3 px-4 py-3 hover:bg-teal-50 dark:hover:bg-teal-900/20 transition-all border-b border-gray-100 dark:border-gray-700">
+                <div className="w-10 h-10 rounded-full bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center">
+                  <Settings className="w-5 h-5 text-teal-600 dark:text-teal-400" />
                 </div>
                 <span className="text-gray-900 dark:text-gray-100">설정</span>
               </button>
               <button
                 onClick={onLogout}
-                className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all"
+                className="w-full flex items-center gap-3 px-4 py-3 hover:bg-teal-50 dark:hover:bg-teal-900/20 transition-all"
               >
                 <div className="w-10 h-10 rounded-full bg-rose-100 dark:bg-rose-900/30 flex items-center justify-center">
                   <LogOut className="w-5 h-5 text-rose-600 dark:text-rose-400" />
@@ -319,7 +322,7 @@ export default function MyPage({ user, onLogout, onUpdateUser }) {
             </div>
 
             {/* 배지 */}
-            <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-sm">
+            <div className="glass-card rounded-2xl p-5 border border-teal-100/50 dark:border-teal-400/20">
               <h3 className="text-gray-900 dark:text-gray-100 mb-4 font-medium">내 배지</h3>
               <div className="grid grid-cols-4 gap-3">
                 {['⚾', '🏆', '⭐', '🔥', '👑', '💪', '🎯', '⚡'].map((badge, index) => (
@@ -329,7 +332,7 @@ export default function MyPage({ user, onLogout, onUpdateUser }) {
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: 0.4 + index * 0.05 }}
                     whileTap={{ scale: 0.9 }}
-                    className="aspect-square bg-gradient-to-br from-slate-100 to-rose-100 dark:from-slate-900/30 dark:to-rose-900/30 rounded-xl flex items-center justify-center text-2xl cursor-pointer"
+                    className="aspect-square bg-gradient-to-br from-teal-100 to-cyan-100 dark:from-teal-900/30 dark:to-cyan-900/30 rounded-xl flex items-center justify-center text-2xl cursor-pointer"
                   >
                     {badge}
                   </motion.div>
@@ -338,10 +341,10 @@ export default function MyPage({ user, onLogout, onUpdateUser }) {
             </div>
 
             {/* 레벨 진행바 */}
-            <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 rounded-2xl p-5 shadow-sm border border-amber-200 dark:border-amber-800">
+            <div className="bg-gradient-to-br from-teal-50 to-cyan-50 dark:from-teal-900/20 dark:to-cyan-900/20 rounded-2xl p-5 shadow-sm border border-teal-200 dark:border-teal-700">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-gray-900 dark:text-gray-100 flex items-center gap-2 font-medium">
-                  <Zap className="w-5 h-5 text-amber-500" />
+                  <Zap className="w-5 h-5 text-teal-500" />
                   레벨 7
                 </h3>
                 <span className="text-sm text-gray-600 dark:text-gray-400">75%</span>
@@ -351,7 +354,7 @@ export default function MyPage({ user, onLogout, onUpdateUser }) {
                   initial={{ width: 0 }}
                   animate={{ width: '75%' }}
                   transition={{ delay: 0.5, duration: 1, ease: 'easeOut' }}
-                  className="h-full bg-gradient-to-r from-amber-400 to-orange-500 rounded-full"
+                  className="h-full bg-gradient-to-r from-teal-400 to-cyan-500 rounded-full"
                 />
               </div>
               <p className="text-sm text-gray-600 dark:text-gray-400 mt-3">
@@ -372,7 +375,7 @@ export default function MyPage({ user, onLogout, onUpdateUser }) {
               <h2 className="text-gray-900 dark:text-gray-100">알림</h2>
               <button
                 onClick={markAllAsRead}
-                className="text-blue-600 dark:text-blue-400 hover:underline"
+                className="text-teal-600 dark:text-teal-400 hover:underline"
               >
                 모두 읽음
               </button>
@@ -389,16 +392,16 @@ export default function MyPage({ user, onLogout, onUpdateUser }) {
                     exit={{ opacity: 0, x: 100, height: 0, marginBottom: 0 }}
                     transition={{ delay: index * 0.05 }}
                     onClick={() => markAsRead(notif.id)}
-                    className={`flex items-start gap-3 p-4 rounded-xl cursor-pointer transition-all relative overflow-hidden shadow-sm ${
+                    className={`flex items-start gap-3 p-4 rounded-xl cursor-pointer transition-all relative overflow-hidden border ${
                       notif.read
-                        ? 'bg-white dark:bg-gray-800'
-                        : 'bg-gradient-to-r from-slate-50 to-rose-50 dark:from-slate-900/20 dark:to-rose-900/20'
+                        ? 'glass-card border-gray-200/50 dark:border-gray-700/30'
+                        : 'glass-card border-teal-200/70 dark:border-teal-700/50 bg-gradient-to-r from-teal-50/30 to-cyan-50/30 dark:from-teal-900/10 dark:to-cyan-900/10'
                     }`}
                   >
                     <img
                       src={notif.avatar}
                       alt={notif.user}
-                      className="w-11 h-11 rounded-full flex-shrink-0"
+                      className="w-11 h-11 rounded-full flex-shrink-0 ring-2 ring-teal-200 dark:ring-teal-400/30"
                     />
                     
                     <div className="flex-1 min-w-0">
@@ -420,7 +423,7 @@ export default function MyPage({ user, onLogout, onUpdateUser }) {
                     </div>
 
                     {!notif.read && (
-                      <div className="w-2 h-2 bg-slate-600 rounded-full flex-shrink-0 mt-2" />
+                      <div className="w-2 h-2 bg-teal-600 rounded-full flex-shrink-0 mt-2" />
                     )}
 
                     {/* 삭제 버튼 */}

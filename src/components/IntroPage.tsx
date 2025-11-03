@@ -3,13 +3,13 @@ import { Sparkles, Heart, TrendingUp, MessageCircle } from 'lucide-react';
 
 export default function IntroPage({ onEnter }) {
   const features = [
-    { icon: Heart, label: '좋아요', color: 'text-rose-400' },
-    { icon: TrendingUp, label: '투표', color: 'text-slate-400' },
-    { icon: MessageCircle, label: 'AI 채팅', color: 'text-amber-400' },
+    { icon: Heart, label: '좋아요', color: 'text-cyan-300' },
+    { icon: TrendingUp, label: '투표', color: 'text-teal-300' },
+    { icon: MessageCircle, label: 'AI 채팅', color: 'text-sky-300' },
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-700 via-rose-500 to-slate-800 flex items-center justify-center p-4 overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-teal-600 via-cyan-500 to-sky-600 flex items-center justify-center p-4 overflow-hidden">
       {/* 배경 애니메이션 */}
       <div className="absolute inset-0 overflow-hidden">
         {[...Array(20)].map((_, i) => (
@@ -98,10 +98,10 @@ export default function IntroPage({ onEnter }) {
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={onEnter}
-          className="w-full bg-white text-slate-700 py-4 rounded-full shadow-2xl relative overflow-hidden group"
+          className="w-full bg-white text-teal-700 py-4 rounded-full shadow-2xl relative overflow-hidden group"
         >
           <motion.div
-            className="absolute inset-0 bg-gradient-to-r from-slate-400/20 to-rose-400/20"
+            className="absolute inset-0 bg-gradient-to-r from-teal-400/20 to-cyan-400/20"
             animate={{ x: ['-100%', '100%'] }}
             transition={{ duration: 2, repeat: Infinity }}
           />

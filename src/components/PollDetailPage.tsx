@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Check, Award, Edit2, Trash2, Save, X, Moon, Sun } from 'lucide-react';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import TeamLogo from './TeamLogo';
 import TeamAvatar from './TeamAvatar';
 

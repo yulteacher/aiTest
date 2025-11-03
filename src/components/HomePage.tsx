@@ -2,13 +2,10 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Heart, TrendingUp, MessageCircle, Users, Award, ChevronRight, Flame } from 'lucide-react';
 import { ImageWithFallback } from './figma/ImageWithFallback';
-import TeamSelector from './TeamSelector';
-import TeamLogo from './TeamLogo';
 
-export default function HomePage({ onNavigate, onPostClick, onPollClick, onChatOpen }) {
+export default function HomePage({ user, onNavigate, onPostClick, onPollClick, onChatOpen }) {
   const [posts, setPosts] = useState([]);
   const [polls, setPolls] = useState([]);
-  const [selectedTeam, setSelectedTeam] = useState(null);
 
   useEffect(() => {
     const savedPosts = localStorage.getItem('posts');
@@ -23,37 +20,21 @@ export default function HomePage({ onNavigate, onPostClick, onPollClick, onChatO
   }, []);
 
   const stats = [
-    { icon: Users, label: '총 회원', value: '1,234', color: 'from-slate-500 to-slate-600' },
-    { icon: Heart, label: '좋아요', value: '5,678', color: 'from-rose-400 to-rose-600' },
-    { icon: TrendingUp, label: '진행중 투표', value: '12', color: 'from-amber-400 to-amber-600' },
+    { icon: Users, label: '총 회원', value: '1,234', color: 'from-teal-500 to-cyan-600' },
+    { icon: Heart, label: '좋아요', value: '5,678', color: 'from-cyan-400 to-sky-600' },
+    { icon: TrendingUp, label: '진행중 투표', value: '12', color: 'from-teal-400 to-cyan-600' },
   ];
 
   const recentPosts = posts.slice(0, 3);
   const trendingPolls = polls.slice(0, 2);
 
-  const filteredPosts = selectedTeam 
-    ? posts.filter(post => post.team?.id === selectedTeam.id)
-    : posts;
-
-  const filteredPolls = selectedTeam
-    ? polls.filter(poll => poll.team?.id === selectedTeam.id)
-    : polls;
-
   return (
     <div className="p-4 space-y-6">
-      {/* 구단 선택 */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-      >
-        <TeamSelector selectedTeam={selectedTeam} onSelectTeam={setSelectedTeam} showAll={true} />
-      </motion.div>
-
       {/* 환영 배너 */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-gradient-to-r from-slate-600 to-rose-500 rounded-2xl p-6 text-white shadow-lg"
+        className="bg-gradient-to-r from-teal-500 via-cyan-500 to-sky-500 dark:from-teal-600 dark:via-cyan-600 dark:to-sky-600 rounded-2xl p-6 text-white shadow-lg dark:shadow-teal-500/20"
       >
         <div className="flex items-center gap-3 mb-2">
           <motion.div
@@ -62,7 +43,7 @@ export default function HomePage({ onNavigate, onPostClick, onPollClick, onChatO
           >
             <Flame className="w-8 h-8" />
           </motion.div>
-          <h2 className="text-white">환영합니다!</h2>
+          <h2 className="text-white">{user?.username || '사용자'}님 환영합니다!</h2>
         </div>
         <p className="text-white/90 text-sm">오늘도 KBO 팬들과 함께 즐거운 하루 되세요 ⚾</p>
       </motion.div>
@@ -77,9 +58,9 @@ export default function HomePage({ onNavigate, onPostClick, onPollClick, onChatO
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: index * 0.1 }}
-              className="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm text-center"
+              className="bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-md dark:shadow-teal-500/10 text-center border border-teal-100 dark:border-teal-400/20"
             >
-              <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${stat.color} flex items-center justify-center mx-auto mb-2`}>
+              <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${stat.color} flex items-center justify-center mx-auto mb-2 shadow-sm`}>
                 <Icon className="w-5 h-5 text-white" />
               </div>
               <div className="text-gray-900 dark:text-gray-100">{stat.value}</div>
@@ -90,7 +71,7 @@ export default function HomePage({ onNavigate, onPostClick, onPollClick, onChatO
       </div>
 
       {/* 인기 투표 */}
-      {filteredPolls.length > 0 && (
+      {trendingPolls.length > 0 && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -98,12 +79,12 @@ export default function HomePage({ onNavigate, onPostClick, onPollClick, onChatO
         >
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-gray-900 dark:text-gray-100 flex items-center gap-2">
-              <TrendingUp className="w-5 h-5 text-slate-600" />
+              <TrendingUp className="w-5 h-5 text-teal-600 dark:text-teal-400" />
               인기 투표
             </h3>
             <button 
               onClick={() => onNavigate && onNavigate('polls')}
-              className="text-slate-600 dark:text-slate-400 flex items-center gap-1 hover:text-slate-800 dark:hover:text-slate-300 transition-colors"
+              className="text-teal-600 dark:text-teal-400 flex items-center gap-1 hover:text-teal-700 dark:hover:text-teal-300 transition-colors"
             >
               더보기
               <ChevronRight className="w-4 h-4" />
@@ -111,7 +92,7 @@ export default function HomePage({ onNavigate, onPostClick, onPollClick, onChatO
           </div>
           
           <div className="space-y-3">
-            {filteredPolls.slice(0, 2).map((poll, index) => (
+            {trendingPolls.map((poll, index) => (
               <motion.div
                 key={poll.id}
                 initial={{ opacity: 0, x: -20 }}
@@ -122,18 +103,18 @@ export default function HomePage({ onNavigate, onPostClick, onPollClick, onChatO
                     onPollClick(poll.id);
                   }
                 }}
-                className="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+                className="bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-md dark:shadow-teal-500/10 cursor-pointer hover:shadow-lg dark:hover:shadow-teal-500/20 transition-all border border-teal-100 dark:border-teal-400/20"
               >
                 <div className="flex items-center gap-3 mb-3">
                   <img
                     src={poll.avatar}
                     alt={poll.author}
-                    className="w-8 h-8 rounded-full"
+                    className="w-8 h-8 rounded-full ring-2 ring-teal-200 dark:ring-teal-400/30"
                   />
                   <div className="flex-1">
                     <div className="text-gray-900 dark:text-gray-100">{poll.author}</div>
                   </div>
-                  <div className="flex items-center gap-1 text-slate-600 dark:text-slate-400 text-xs">
+                  <div className="flex items-center gap-1 text-teal-600 dark:text-teal-400 text-xs">
                     <Award className="w-4 h-4" />
                     <span>{poll.totalVotes}</span>
                   </div>
@@ -146,7 +127,7 @@ export default function HomePage({ onNavigate, onPostClick, onPollClick, onChatO
       )}
 
       {/* 최근 게시글 */}
-      {filteredPosts.length > 0 && (
+      {recentPosts.length > 0 && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -154,12 +135,12 @@ export default function HomePage({ onNavigate, onPostClick, onPollClick, onChatO
         >
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-gray-900 dark:text-gray-100 flex items-center gap-2">
-              <Heart className="w-5 h-5 text-rose-500" />
+              <Heart className="w-5 h-5 text-cyan-500 dark:text-cyan-400" />
               최근 게시글
             </h3>
             <button 
               onClick={() => onNavigate && onNavigate('feed')}
-              className="text-slate-600 dark:text-slate-400 flex items-center gap-1 hover:text-slate-800 dark:hover:text-slate-300 transition-colors"
+              className="text-teal-600 dark:text-teal-400 flex items-center gap-1 hover:text-teal-700 dark:hover:text-teal-300 transition-colors"
             >
               더보기
               <ChevronRight className="w-4 h-4" />
@@ -167,7 +148,7 @@ export default function HomePage({ onNavigate, onPostClick, onPollClick, onChatO
           </div>
 
           <div className="space-y-3">
-            {filteredPosts.slice(0, 3).map((post, index) => (
+            {recentPosts.map((post, index) => (
               <motion.div
                 key={post.id}
                 initial={{ opacity: 0, x: -20 }}
@@ -178,13 +159,13 @@ export default function HomePage({ onNavigate, onPostClick, onPollClick, onChatO
                     onPostClick(post.id);
                   }
                 }}
-                className="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+                className="glass-card glass-card-hover rounded-2xl p-4 cursor-pointer border border-teal-100/50 dark:border-teal-400/20"
               >
                 <div className="flex items-start gap-3">
                   <img
                     src={post.avatar}
                     alt={post.author}
-                    className="w-10 h-10 rounded-full"
+                    className="w-10 h-10 rounded-full ring-2 ring-teal-200 dark:ring-teal-400/30"
                   />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
@@ -230,17 +211,17 @@ export default function HomePage({ onNavigate, onPostClick, onPollClick, onChatO
         <motion.button 
           whileTap={{ scale: 0.95 }}
           onClick={() => onChatOpen && onChatOpen()}
-          className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 rounded-2xl p-6 text-center border border-amber-200 dark:border-amber-800 hover:shadow-lg transition-shadow"
+          className="glass-card glass-card-hover rounded-2xl p-6 text-center border border-sky-200/50 dark:border-sky-700/30"
         >
-          <MessageCircle className="w-8 h-8 text-amber-600 dark:text-amber-400 mx-auto mb-2" />
+          <MessageCircle className="w-8 h-8 text-sky-600 dark:text-sky-400 mx-auto mb-2" />
           <div className="text-gray-900 dark:text-gray-100">AI 채팅</div>
         </motion.button>
         <motion.button 
           whileTap={{ scale: 0.95 }}
           onClick={() => onNavigate && onNavigate('polls')}
-          className="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900/20 dark:to-slate-800/20 rounded-2xl p-6 text-center border border-slate-200 dark:border-slate-800 hover:shadow-lg transition-shadow"
+          className="glass-card glass-card-hover rounded-2xl p-6 text-center border border-teal-200/50 dark:border-teal-700/30"
         >
-          <TrendingUp className="w-8 h-8 text-slate-600 dark:text-slate-400 mx-auto mb-2" />
+          <TrendingUp className="w-8 h-8 text-teal-600 dark:text-teal-400 mx-auto mb-2" />
           <div className="text-gray-900 dark:text-gray-100">투표 만들기</div>
         </motion.button>
       </motion.div>
@@ -250,7 +231,7 @@ export default function HomePage({ onNavigate, onPostClick, onPollClick, onChatO
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 1 }}
-        className="bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 rounded-2xl p-4 border border-yellow-200 dark:border-yellow-800"
+        className="glass-card rounded-2xl p-4 border border-sky-200/50 dark:border-sky-700/30"
       >
         <div className="flex items-start gap-3">
           <div className="text-2xl">📢</div>

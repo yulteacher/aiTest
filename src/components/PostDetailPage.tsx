@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Heart, MessageCircle, Share2, ArrowLeft, Edit2, Trash2, Send, Check, X, Moon, Sun } from 'lucide-react';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import TeamLogo from './TeamLogo';
 import TeamAvatar from './TeamAvatar';
 import { ImageWithFallback } from './figma/ImageWithFallback';
@@ -150,12 +150,36 @@ export default function PostDetailPage({ postId, onBack, isDarkMode, onToggleDar
     const shareText = `${post.author}: ${post.content}`;
     if (navigator.share) {
       navigator.share({ title: 'KBO 팬덤', text: shareText }).catch(() => {
-        navigator.clipboard.writeText(shareText);
-        toast.success('링크가 복사되었습니다!');
+        try {
+          // Fallback for clipboard
+          const textArea = document.createElement('textarea');
+          textArea.value = shareText;
+          textArea.style.position = 'fixed';
+          textArea.style.left = '-999999px';
+          document.body.appendChild(textArea);
+          textArea.select();
+          document.execCommand('copy');
+          document.body.removeChild(textArea);
+          toast.success('링크가 복사되었습니다!');
+        } catch (err) {
+          toast.error('복사에 실패했습니다');
+        }
       });
     } else {
-      navigator.clipboard.writeText(shareText);
-      toast.success('링크가 복사되었습니다!');
+      try {
+        // Fallback for clipboard
+        const textArea = document.createElement('textarea');
+        textArea.value = shareText;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        toast.success('링크가 복사되었습니다!');
+      } catch (err) {
+        toast.error('복사에 실패했습니다');
+      }
     }
     setShowShareMenu(false);
   };

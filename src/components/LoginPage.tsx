@@ -104,7 +104,7 @@ export default function LoginPage({ onLogin }) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-700 via-rose-500 to-slate-800 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-teal-600 via-cyan-500 to-sky-600 flex items-center justify-center p-4">
       {/* 배경 애니메이션 */}
       <div className="absolute inset-0 overflow-hidden">
         {[...Array(15)].map((_, i) => (
@@ -217,7 +217,7 @@ export default function LoginPage({ onLogin }) {
 
                 <div>
                   <label className="block text-white mb-3">응원하는 구단</label>
-                  <div className="grid grid-cols-2 gap-2 max-h-64 overflow-y-auto">
+                  <div className="grid grid-cols-2 gap-2 max-h-64 overflow-y-auto pr-2 scrollbar-liquid-glass">
                     {KBO_TEAMS.map((team) => (
                       <motion.button
                         key={team.id}
@@ -253,7 +253,7 @@ export default function LoginPage({ onLogin }) {
               type="submit"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              className="w-full bg-white text-slate-700 py-3 rounded-xl flex items-center justify-center gap-2 shadow-lg"
+              className="w-full bg-white text-teal-700 py-3 rounded-xl flex items-center justify-center gap-2 shadow-lg"
             >
               {isSignup ? (
                 <>

@@ -35,7 +35,7 @@ export default function TeamAvatar({ team, src, alt = 'avatar', size = 'md', cla
     return initials[teamName] || teamName?.[0] || '?';
   };
 
-  const colors = team ? teamColors[team] : { primary: '#6B7280', secondary: '#9CA3AF' };
+  const colors = (team && teamColors[team]) ? teamColors[team] : { primary: '#6B7280', secondary: '#9CA3AF' };
 
   if (src) {
     return (
@@ -52,7 +52,7 @@ export default function TeamAvatar({ team, src, alt = 'avatar', size = 'md', cla
     <div
       className={`${sizeClasses[size]} rounded-full flex items-center justify-center font-bold text-white ${className}`}
       style={{
-        background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.secondary} 100%)`
+        background: `linear-gradient(135deg, ${colors.primary || '#6B7280'} 0%, ${colors.secondary || '#9CA3AF'} 100%)`
       }}
     >
       <span className={size === 'sm' ? 'text-xs' : size === 'md' ? 'text-sm' : size === 'lg' ? 'text-xl' : 'text-3xl'}>

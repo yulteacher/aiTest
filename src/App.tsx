@@ -11,6 +11,37 @@ import MyPage from './components/MyPage';
 import PostDetailPage from './components/PostDetailPage';
 import PollDetailPage from './components/PollDetailPage';
 import { Toaster } from './components/ui/sonner';
+import { dummyPostsData } from './data/dummyPosts';
+import { dummyPollsData } from './data/dummyPolls';
+
+export interface Post {
+  id: string;
+  author: string;
+  avatar: string;
+  timestamp: string;
+  content: string;
+  image?: string;
+  likes: number;
+  comments: number;
+  liked: boolean;
+  team?: string;
+}
+
+export interface Poll {
+  id: string;
+  question: string;
+  options: Array<{
+    id: string;
+    text: string;
+    votes: number;
+  }>;
+  author: string;
+  avatar: string;
+  timestamp: string;
+  team?: string;
+  totalVotes: number;
+  userVoted?: string;
+}
 
 export default function App() {
   const [showIntro, setShowIntro] = useState(true);
@@ -21,7 +52,7 @@ export default function App() {
   const [selectedPostId, setSelectedPostId] = useState(null);
   const [selectedPollId, setSelectedPollId] = useState(null);
 
-  // 인트로 확인
+  // 인트로 확인 및 초기 데이터 생성
   useEffect(() => {
     const hasVisited = localStorage.getItem('hasVisited');
     if (hasVisited) {
@@ -37,7 +68,49 @@ export default function App() {
       localStorage.setItem('contentVersion', 'kbo-v2');
       console.log('✅ KBO 콘텐츠로 업데이트되었습니다!');
     }
+
+    // 🆕 초기 더미 데이터 생성
+    initializeDummyData();
   }, []);
+
+  // 초기 더미 데이터 생성 함수
+  const initializeDummyData = () => {
+    // Posts 더미 데이터 생성
+    if (!localStorage.getItem('posts')) {
+      const { teams, postTemplates, avatars, images, timestamps } = dummyPostsData;
+      const initialPosts = [];
+      let postId = 1;
+
+      teams.forEach((team) => {
+        postTemplates.forEach((template, idx) => {
+          const post = {
+            id: postId.toString(),
+            author: `${team.name} 팬${idx + 1}`,
+            avatar: avatars[idx % avatars.length],
+            content: template.content,
+            team: team,
+            image: template.hasImage ? images[idx % images.length] : undefined,
+            likes: Math.floor(Math.random() * 500) + 10,
+            timestamp: timestamps[idx % timestamps.length],
+            liked: Math.random() > 0.7,
+            commentsList: []
+          };
+          initialPosts.push(post);
+          postId++;
+        });
+      });
+
+      initialPosts.sort(() => Math.random() - 0.5);
+      localStorage.setItem('posts', JSON.stringify(initialPosts));
+      console.log('✅ Posts 더미 데이터 생성 완료!');
+    }
+
+    // Polls 더미 데이터 생성
+    if (!localStorage.getItem('polls')) {
+      localStorage.setItem('polls', JSON.stringify(dummyPollsData));
+      console.log('✅ Polls 더미 데이터 생성 완료!');
+    }
+  };
 
   // 사용자 로그인 상태 확인
   useEffect(() => {
@@ -132,6 +205,7 @@ export default function App() {
       case 'home':
         return (
           <HomePage 
+            user={user}
             onNavigate={setActiveTab}
             onPostClick={setSelectedPostId}
             onPollClick={setSelectedPollId}
@@ -147,9 +221,11 @@ export default function App() {
       default:
         return (
           <HomePage 
+            user={user}
             onNavigate={setActiveTab}
             onPostClick={setSelectedPostId}
             onPollClick={setSelectedPollId}
+            onChatOpen={() => setShowChat(true)}
           />
         );
     }
@@ -186,11 +262,11 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
+    <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-teal-50 to-sky-50 dark:bg-gradient-to-br dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 transition-colors">
       {/* 배경 그라디언트 (정적) */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden opacity-50">
-        <div className="absolute -top-1/2 -left-1/2 w-full h-full bg-gradient-to-br from-slate-500/10 to-rose-500/10 dark:from-slate-500/5 dark:to-rose-500/5 rounded-full blur-3xl" />
-        <div className="absolute -bottom-1/2 -right-1/2 w-full h-full bg-gradient-to-tl from-rose-500/10 to-slate-500/10 dark:from-rose-500/5 dark:to-slate-500/5 rounded-full blur-3xl" />
+      <div className="fixed inset-0 pointer-events-none overflow-hidden opacity-30">
+        <div className="absolute -top-1/2 -left-1/2 w-full h-full bg-gradient-to-br from-teal-400/20 to-cyan-400/20 dark:from-teal-500/10 dark:to-cyan-500/10 rounded-full blur-3xl" />
+        <div className="absolute -bottom-1/2 -right-1/2 w-full h-full bg-gradient-to-tl from-cyan-400/20 to-sky-400/20 dark:from-cyan-500/10 dark:to-sky-500/10 rounded-full blur-3xl" />
       </div>
 
       {/* 헤더 - 통일된 헤더 */}
@@ -198,7 +274,7 @@ export default function App() {
         initial={{ y: -100 }}
         animate={{ y: 0 }}
         transition={{ type: 'spring', stiffness: 100 }}
-        className="fixed top-0 left-0 right-0 bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl border-b border-gray-200 dark:border-gray-700 z-50 transition-colors"
+        className="fixed top-0 left-0 right-0 bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl border-b border-teal-200/50 dark:border-teal-400/20 z-50 transition-colors shadow-sm dark:shadow-teal-500/10"
       >
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between relative">
           {/* 왼쪽 영역 - 뒤로가기 버튼 */}
@@ -245,7 +321,7 @@ export default function App() {
           {/* 오른쪽 영역 - 다크모드 토글 */}
           <motion.button
             onClick={toggleDarkMode}
-            className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            className="p-2 rounded-full hover:bg-teal-100 dark:hover:bg-teal-500/20 transition-colors"
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
           >
@@ -258,7 +334,7 @@ export default function App() {
                   exit={{ rotate: 90, scale: 0 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <Sun className="w-5 h-5 text-yellow-400" />
+                  <Sun className="w-5 h-5 text-teal-400" />
                 </motion.div>
               ) : (
                 <motion.div
@@ -268,7 +344,7 @@ export default function App() {
                   exit={{ rotate: -90, scale: 0 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <Moon className="w-5 h-5 text-gray-600" />
+                  <Moon className="w-5 h-5 text-teal-600" />
                 </motion.div>
               )}
             </AnimatePresence>
@@ -297,7 +373,7 @@ export default function App() {
         animate={{ scale: 1 }}
         transition={{ delay: 0.5, type: 'spring', stiffness: 200 }}
         onClick={() => setShowChat(!showChat)}
-        className="fixed bottom-24 right-6 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-full p-4 shadow-lg hover:shadow-xl transition-all z-40"
+        className="fixed bottom-24 right-6 bg-gradient-to-r from-teal-500 to-cyan-500 dark:from-teal-400 dark:to-cyan-400 text-white dark:text-slate-900 rounded-full p-4 shadow-lg hover:shadow-xl dark:shadow-teal-500/30 transition-all z-40"
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
       >
@@ -338,7 +414,7 @@ export default function App() {
         initial={{ y: 100 }}
         animate={{ y: 0 }}
         transition={{ type: 'spring', stiffness: 100, delay: 0.2 }}
-        className="fixed bottom-0 left-0 right-0 bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl border-t border-gray-200 dark:border-gray-700 z-50 transition-colors"
+        className="fixed bottom-0 left-0 right-0 bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl border-t border-teal-200/50 dark:border-teal-400/20 z-50 transition-colors shadow-lg dark:shadow-teal-500/10"
       >
         <div className="max-w-2xl mx-auto px-2 py-2">
           <div className="flex items-center justify-around">
@@ -358,14 +434,14 @@ export default function App() {
                   <Icon
                     className={`w-6 h-6 transition-colors ${
                       isActive
-                        ? 'text-slate-700 dark:text-slate-400'
+                        ? 'text-teal-600 dark:text-teal-400'
                         : 'text-gray-400 dark:text-gray-500'
                     }`}
                   />
                   <span
                     className={`text-xs transition-colors ${
                       isActive
-                        ? 'text-slate-700 dark:text-slate-400'
+                        ? 'text-teal-600 dark:text-teal-400'
                         : 'text-gray-400 dark:text-gray-500'
                     }`}
                   >
@@ -374,7 +450,7 @@ export default function App() {
                   {isActive && (
                     <motion.div
                       layoutId="activeTab"
-                      className="absolute inset-0 bg-slate-100 dark:bg-slate-900/20 rounded-lg -z-10"
+                      className="absolute inset-0 bg-teal-100 dark:bg-teal-500/20 rounded-lg -z-10"
                       transition={{ type: 'spring', stiffness: 300, damping: 30 }}
                     />
                   )}

@@ -88,12 +88,12 @@ export default function ChatPage({ isFloating = false }) {
   };
 
   return (
-    <div className="flex flex-col bg-white dark:bg-gray-800 rounded-2xl shadow-2xl overflow-hidden h-full max-h-[600px]">
+    <div className="flex flex-col glass-card rounded-2xl overflow-hidden h-full max-h-[600px] border border-teal-100/50 dark:border-teal-400/20">
       {/* AI 챗봇 헤더 */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-gradient-to-r from-amber-500 to-orange-500 p-4 rounded-t-2xl"
+        className="bg-gradient-to-r from-sky-500 via-cyan-500 to-teal-500 p-4 rounded-t-2xl"
       >
         <div className="flex items-center gap-3 text-white">
           <div className="bg-white/20 p-2 rounded-full">
@@ -129,8 +129,8 @@ export default function ChatPage({ isFloating = false }) {
                 whileHover={{ scale: 1.02 }}
                 className={`max-w-[80%] rounded-2xl px-4 py-3 ${
                   message.isBot
-                    ? 'bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600 text-gray-900 dark:text-gray-100'
-                    : 'bg-gradient-to-br from-purple-600 to-pink-600 text-white shadow-lg'
+                    ? 'glass-card text-gray-900 dark:text-gray-100 border border-sky-200/50 dark:border-sky-700/30'
+                    : 'bg-gradient-to-br from-teal-500 to-cyan-600 text-white shadow-lg backdrop-blur-sm'
                 }`}
               >
                 <p className="break-words">{message.text}</p>
@@ -145,12 +145,12 @@ export default function ChatPage({ isFloating = false }) {
             animate={{ opacity: 1, y: 0 }}
             className="flex justify-start"
           >
-            <div className="bg-gray-100 dark:bg-gray-700 rounded-2xl px-4 py-3">
+            <div className="glass-card border border-sky-200/50 dark:border-sky-700/30 rounded-2xl px-4 py-3">
               <div className="flex gap-1">
                 {[0, 1, 2].map((i) => (
                   <motion.div
                     key={i}
-                    className="w-2 h-2 bg-gray-400 rounded-full"
+                    className="w-2 h-2 bg-teal-400 rounded-full"
                     animate={{ y: [0, -10, 0] }}
                     transition={{
                       duration: 0.6,
@@ -168,7 +168,7 @@ export default function ChatPage({ isFloating = false }) {
       </div>
 
       {/* 입력 영역 */}
-      <div className="p-4 rounded-b-2xl border-t border-gray-200 dark:border-gray-700">
+      <div className="p-4 rounded-b-2xl border-t border-teal-200 dark:border-teal-700">
         <div className="flex gap-2">
           <input
             type="text"
@@ -176,13 +176,13 @@ export default function ChatPage({ isFloating = false }) {
             onChange={(e) => setInput(e.target.value)}
             onKeyPress={handleKeyPress}
             placeholder="메시지를 입력하세요..."
-            className="flex-1 px-5 py-3 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-full focus:outline-none focus:ring-2 focus:ring-amber-500"
+            className="flex-1 px-5 py-3 bg-teal-50 dark:bg-teal-900/30 text-gray-900 dark:text-gray-100 rounded-full focus:outline-none focus:ring-2 focus:ring-teal-500 border border-teal-200 dark:border-teal-700"
           />
           <motion.button
             whileTap={{ scale: 0.9 }}
             onClick={handleSend}
             disabled={!input.trim()}
-            className="bg-gradient-to-r from-amber-500 to-orange-500 text-white p-3 rounded-full hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            className="bg-gradient-to-r from-teal-500 to-cyan-500 text-white p-3 rounded-full hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Send className="w-5 h-5" />
           </motion.button>
