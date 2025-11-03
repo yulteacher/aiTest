@@ -1,2 +1,5 @@
 node_modules
 .vercel
+# 빌드 결과물 폴더 무시
+build/
+dist/
