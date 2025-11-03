@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { Heart, MessageCircle, Share2, Image as ImageIcon, Trash2, Edit2 } from 'lucide-react';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import Confetti from './Confetti';

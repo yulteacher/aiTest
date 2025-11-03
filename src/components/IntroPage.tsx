@@ -1,4 +1,4 @@
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { Sparkles, Heart, TrendingUp, MessageCircle } from 'lucide-react';
 
 export default function IntroPage({ onEnter }) {

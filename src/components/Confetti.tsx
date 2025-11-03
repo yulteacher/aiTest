@@ -1,4 +1,4 @@
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 
 export default function Confetti() {
   const confettiPieces = Array.from({ length: 30 }, (_, i) => i);

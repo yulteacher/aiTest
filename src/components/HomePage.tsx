@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { Heart, TrendingUp, MessageCircle, Users, Award, ChevronRight, Flame } from 'lucide-react';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import TeamSelector from './TeamSelector';

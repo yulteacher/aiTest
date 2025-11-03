@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Heart, MessageCircle, TrendingUp, UserPlus, X } from 'lucide-react';
 
 export default function NotificationsPage() {

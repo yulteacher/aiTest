@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { LogIn, UserPlus, Sparkles, ChevronRight, Camera } from 'lucide-react';
 import { KBO_TEAMS } from '../constants/teams';
 import TeamAvatar from './TeamAvatar';

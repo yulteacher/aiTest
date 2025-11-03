@@ -14,10 +14,11 @@ AI 챗봇 지원 KBO 팬덤 커뮤니티 앱
 ## 기술 스택
 
 - React 18
-- Vite
-- Tailwind CSS 4
-- Motion (Framer Motion)
+- Vite 5
+- Tailwind CSS 3.4
+- Framer Motion 11
 - Lucide React Icons
+- Radix UI Components
 - LocalStorage (데이터 저장)
 
 ## 로컬 개발
@@ -26,7 +27,7 @@ AI 챗봇 지원 KBO 팬덤 커뮤니티 앱
 # 의존성 설치
 npm install
 
-# 개발 서버 시작
+# 개발 서버 시작 (http://localhost:5173)
 npm run dev
 
 # 빌드
@@ -36,6 +37,19 @@ npm run build
 npm run preview
 \`\`\`
 
+### 설치 문제 해결
+
+만약 `npm install`에서 에러가 발생하면:
+
+\`\`\`bash
+# node_modules와 package-lock.json 삭제 후 재설치
+rm -rf node_modules package-lock.json
+npm install
+
+# 또는 --legacy-peer-deps 옵션 사용
+npm install --legacy-peer-deps
+\`\`\`
+
 ## Vercel 배포
 
 1. GitHub에 푸시
@@ -43,7 +57,8 @@ npm run preview
 3. Framework Preset: **Vite** 선택
 4. Build Command: `npm run build`
 5. Output Directory: `dist`
-6. Deploy 클릭
+6. Install Command: `npm install` (또는 `npm install --legacy-peer-deps`)
+7. Deploy 클릭
 
 ## 구조
 

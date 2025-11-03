@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Home, TrendingUp, Moon, Sun, Rss, User, MessageCircle, X, ArrowLeft } from 'lucide-react';
 import IntroPage from './components/IntroPage';
 import LoginPage from './components/LoginPage';

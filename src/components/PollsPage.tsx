@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { motion, useMotionValue, useTransform } from 'motion/react';
+import { motion, useMotionValue, useTransform } from 'framer-motion';
 import { Check, Plus, Award, Zap, Trash2 } from 'lucide-react';
 import TeamSelector from './TeamSelector';
 import TeamLogo from './TeamLogo';

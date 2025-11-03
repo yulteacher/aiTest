@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { Heart, MessageCircle, Share2, ArrowLeft, Edit2, Trash2, Send, Check, X, Moon, Sun } from 'lucide-react';
 import { toast } from 'sonner@2.0.3';
 import TeamLogo from './TeamLogo';

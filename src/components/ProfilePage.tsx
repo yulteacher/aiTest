@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { Edit2, Settings, LogOut, Award, Zap, Heart, Camera } from 'lucide-react';
 
 export default function ProfilePage() {

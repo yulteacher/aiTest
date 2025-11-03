@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Edit2, Settings, LogOut, Award, Zap, Heart, Bell, MessageCircle, TrendingUp, UserPlus, X, Camera, Check } from 'lucide-react';
 import TeamAvatar from './TeamAvatar';
 import { KBO_TEAMS } from '../constants/teams';

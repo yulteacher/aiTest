@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Send, Bot, Sparkles } from 'lucide-react';
 
 export default function ChatPage({ isFloating = false }) {
