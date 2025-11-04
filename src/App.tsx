@@ -13,6 +13,7 @@ import PollDetailPage from './components/PollDetailPage';
 import { Toaster } from './components/ui/sonner';
 import { dummyPostsData } from './data/dummyPosts.js';
 import { dummyPollsData } from './data/dummyPolls.js';
+import LiquidEther from "./components/reactbits/LiquidEther";
 
 export interface Post {
   id: string;
@@ -250,7 +251,26 @@ export default function App() {
   if (!user) return <LoginPage onLogin={handleLogin} />;
 
   return (
-    <div className="min-h-screen transition-colors">
+    <div className="min-h-screen transition-colors relative">
+      <div style={{ width: '100%', height: '100vh', position: 'fixed' }}>
+        <LiquidEther
+          colors={['#5227FF', '#FF9FFC', '#B19EEF']}
+          mouseForce={20}
+          cursorSize={100}
+          isViscous={false}
+          viscous={30}
+          iterationsViscous={32}
+          iterationsPoisson={32}
+          resolution={0.5}
+          isBounce={false}
+          autoDemo={true}
+          autoSpeed={0.5}
+          autoIntensity={2.2}
+          takeoverDuration={0.25}
+          autoResumeDelay={3000}
+          autoRampDuration={0.6}
+        />
+      </div>
       {/* 배경 그라디언트 */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden opacity-40 dark:opacity-30">
         <div className="absolute -top-1/2 -left-1/2 w-full h-full bg-gradient-to-br from-teal-400/20 to-cyan-400/20 dark:from-teal-400/30 dark:to-cyan-400/30 rounded-full blur-3xl" />
