@@ -11,8 +11,8 @@ import MyPage from './components/MyPage';
 import PostDetailPage from './components/PostDetailPage';
 import PollDetailPage from './components/PollDetailPage';
 import { Toaster } from './components/ui/sonner';
-import { dummyPostsData } from './data/dummyPosts';
-import { dummyPollsData } from './data/dummyPolls';
+import { dummyPostsData } from './data/dummyPosts.js';
+import { dummyPollsData } from './data/dummyPolls.js';
 
 export interface Post {
   id: string;
@@ -52,14 +52,23 @@ export default function App() {
   const [selectedPostId, setSelectedPostId] = useState(null);
   const [selectedPollId, setSelectedPollId] = useState(null);
 
-  // 인트로 확인 및 초기 데이터 생성
+  // 🧭 페이지 제목 자동 변경
+  useEffect(() => {
+    let title = 'KBO 팬덤 커뮤니티';
+    if (selectedPostId) title = '게시글 상세보기 - KBO 팬덤 커뮤니티';
+    else if (selectedPollId) title = '투표 상세보기 - KBO 팬덤 커뮤니티';
+    else if (activeTab === 'feed') title = '피드 - KBO 팬덤 커뮤니티';
+    else if (activeTab === 'polls') title = '투표 - KBO 팬덤 커뮤니티';
+    else if (activeTab === 'mypage') title = '마이페이지 - KBO 팬덤 커뮤니티';
+    document.title = title;
+  }, [activeTab, selectedPostId, selectedPollId]);
+
+  // 🌟 인트로 및 초기 더미 데이터 로직
   useEffect(() => {
     const hasVisited = localStorage.getItem('hasVisited');
-    if (hasVisited) {
-      setShowIntro(false);
-    }
-    
-    // 🔧 콘텐츠 업데이트: 기존 데이터 초기화 (한 번만 실행)
+    if (hasVisited) setShowIntro(false);
+
+    // 버전 관리: 데이터 초기화
     const contentVersion = localStorage.getItem('contentVersion');
     if (contentVersion !== 'kbo-v2') {
       localStorage.removeItem('posts');
@@ -69,19 +78,21 @@ export default function App() {
       console.log('✅ KBO 콘텐츠로 업데이트되었습니다!');
     }
 
-    // 🆕 초기 더미 데이터 생성
-    initializeDummyData();
+    // 앱 최초 실행 시 더미 데이터 생성
+    if (hasVisited) initializeDummyData();
   }, []);
 
-  // 초기 더미 데이터 생성 함수
+
+  // ✅ 더미 데이터 생성 함수
   const initializeDummyData = () => {
-    // Posts 더미 데이터 생성
     if (!localStorage.getItem('posts')) {
       const { teams, postTemplates, avatars, images, timestamps } = dummyPostsData;
       const initialPosts = [];
       let postId = 1;
 
       teams.forEach((team) => {
+        const teamImages = images[team.id] || []; // ✅ 팀별 이미지 배열 가져오기
+
         postTemplates.forEach((template, idx) => {
           const post = {
             id: postId.toString(),
@@ -89,11 +100,13 @@ export default function App() {
             avatar: avatars[idx % avatars.length],
             content: template.content,
             team: team,
-            image: template.hasImage ? images[idx % images.length] : undefined,
+            image: template.hasImage
+              ? teamImages[idx % teamImages.length] // ✅ 팀별 이미지 랜덤 지정
+              : undefined,
             likes: Math.floor(Math.random() * 500) + 10,
             timestamp: timestamps[idx % timestamps.length],
             liked: Math.random() > 0.7,
-            commentsList: []
+            commentsList: [],
           };
           initialPosts.push(post);
           postId++;
@@ -105,20 +118,29 @@ export default function App() {
       console.log('✅ Posts 더미 데이터 생성 완료!');
     }
 
-    // Polls 더미 데이터 생성
     if (!localStorage.getItem('polls')) {
       localStorage.setItem('polls', JSON.stringify(dummyPollsData));
       console.log('✅ Polls 더미 데이터 생성 완료!');
     }
   };
 
-  // 사용자 로그인 상태 확인
+
+
+  // ✅ 인트로 끝나고 "시작하기" 누를 때
+  const handleEnterApp = () => {
+    localStorage.setItem('hasVisited', 'true');
+    setShowIntro(false);
+    initializeDummyData(); // 인트로 후 즉시 생성
+  };
+
+
+
+  // ✅ 사용자 로그인 상태 유지
   useEffect(() => {
     const savedUser = localStorage.getItem('currentUser');
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
-    }
+    if (savedUser) setUser(JSON.parse(savedUser));
   }, []);
+
 
   // 다크모드 로컬스토리지에서 불러오기
   useEffect(() => {
@@ -147,19 +169,11 @@ export default function App() {
     }
   };
 
-  const handleEnterApp = () => {
-    localStorage.setItem('hasVisited', 'true');
-    setShowIntro(false);
-  };
 
-  const handleLogin = (userData) => {
+  // 로그인/로그아웃
+  const handleLogin = (userData: any) => {
     setUser(userData);
     localStorage.setItem('currentUser', JSON.stringify(userData));
-  };
-
-  const handleUpdateUser = (updatedUserData) => {
-    setUser(updatedUserData);
-    localStorage.setItem('currentUser', JSON.stringify(updatedUserData));
   };
 
   const handleLogout = () => {
@@ -168,6 +182,13 @@ export default function App() {
     setActiveTab('home');
   };
 
+  const handleUpdateUser = (updatedUserData) => {
+    setUser(updatedUserData);
+    localStorage.setItem('currentUser', JSON.stringify(updatedUserData));
+  };
+
+
+  // 탭 구성
   const tabs = [
     { id: 'home', icon: Home, label: '홈' },
     { id: 'feed', icon: Rss, label: '피드' },
@@ -176,35 +197,29 @@ export default function App() {
   ];
 
   const renderPage = () => {
-    // 게시글 상세 페이지
-    if (selectedPostId) {
+    if (selectedPostId)
       return (
-        <PostDetailPage 
-          postId={selectedPostId} 
+        <PostDetailPage
+          postId={selectedPostId}
           onBack={() => setSelectedPostId(null)}
           isDarkMode={darkMode}
           onToggleDarkMode={toggleDarkMode}
         />
       );
-    }
 
-    // 투표 상세 페이지
-    if (selectedPollId) {
+    if (selectedPollId)
       return (
-        <PollDetailPage 
-          pollId={selectedPollId} 
+        <PollDetailPage
+          pollId={selectedPollId}
           onBack={() => setSelectedPollId(null)}
           isDarkMode={darkMode}
           onToggleDarkMode={toggleDarkMode}
         />
       );
-    }
-
-    // 일반 페이지
     switch (activeTab) {
       case 'home':
         return (
-          <HomePage 
+          <HomePage
             user={user}
             onNavigate={setActiveTab}
             onPostClick={setSelectedPostId}
@@ -219,47 +234,20 @@ export default function App() {
       case 'mypage':
         return <MyPage user={user} onLogout={handleLogout} onUpdateUser={handleUpdateUser} />;
       default:
-        return (
-          <HomePage 
-            user={user}
-            onNavigate={setActiveTab}
-            onPostClick={setSelectedPostId}
-            onPollClick={setSelectedPollId}
-            onChatOpen={() => setShowChat(true)}
-          />
-        );
+        return null;
     }
   };
 
   const pageVariants = {
-    initial: { 
-      opacity: 0, 
-      y: 20,
-    },
-    animate: { 
-      opacity: 1, 
-      y: 0,
-      transition: {
-        duration: 0.3,
-      }
-    },
-    exit: { 
-      opacity: 0,
-      transition: {
-        duration: 0.2
-      }
-    }
+    initial: { opacity: 0, y: 20 },
+    animate: { opacity: 1, y: 0, transition: { duration: 0.3 } },
+    exit: { opacity: 0, transition: { duration: 0.2 } },
   };
 
-  // 인트로 페이지 표시
-  if (showIntro) {
-    return <IntroPage onEnter={handleEnterApp} />;
-  }
-
-  // 로그인하지 않은 경우
-  if (!user) {
-    return <LoginPage onLogin={handleLogin} />;
-  }
+  //  인트로
+  if (showIntro) return <IntroPage onEnter={handleEnterApp} />;
+  //  로그인
+  if (!user) return <LoginPage onLogin={handleLogin} />;
 
   return (
     <div className="min-h-screen transition-colors">
@@ -270,7 +258,7 @@ export default function App() {
       </div>
 
       {/* 헤더 - 통일된 헤더 */}
-      <motion.header 
+      <motion.header
         initial={{ y: -100 }}
         animate={{ y: 0 }}
         transition={{ type: 'spring', stiffness: 100 }}
@@ -298,7 +286,7 @@ export default function App() {
               </motion.button>
             )}
           </div>
-          
+
           {/* 중앙 영역 - 제목 */}
           <h1 className="absolute left-1/2 -translate-x-1/2 text-slate-700 dark:text-[#e2e8f0] flex items-center gap-2">
             {selectedPostId ? (
@@ -317,7 +305,7 @@ export default function App() {
               '⚾ KBO 팬덤'
             )}
           </h1>
-          
+
           {/* 오른쪽 영역 - 다크모드 토글 */}
           <motion.button
             onClick={toggleDarkMode}
@@ -410,7 +398,7 @@ export default function App() {
       </AnimatePresence>
 
       {/* 하단 네비게이션 */}
-      <motion.nav 
+      <motion.nav
         initial={{ y: 100 }}
         animate={{ y: 0 }}
         transition={{ type: 'spring', stiffness: 100, delay: 0.2 }}
@@ -432,18 +420,16 @@ export default function App() {
                   transition={{ delay: index * 0.05 }}
                 >
                   <Icon
-                    className={`w-6 h-6 transition-colors ${
-                      isActive
-                        ? 'text-white dark:text-[#00d5be]'
-                        : 'text-[#01B9D1] dark:text-gray-500'
-                    }`}
+                    className={`w-6 h-6 transition-colors ${isActive
+                      ? 'text-white dark:text-[#00d5be]'
+                      : 'text-[#01B9D1] dark:text-gray-500'
+                      }`}
                   />
                   <span
-                    className={`text-xs transition-colors ${
-                      isActive
-                        ? 'text-white dark:text-[#00d5be]'
-                        : 'text-[#01B9D1] dark:text-gray-500'
-                    }`}
+                    className={`text-xs transition-colors ${isActive
+                      ? 'text-white dark:text-[#00d5be]'
+                      : 'text-[#01B9D1] dark:text-gray-500'
+                      }`}
                   >
                     {tab.label}
                   </span>

@@ -15,11 +15,11 @@ export default function LoginPage({ onLogin }) {
 
   const handleLogin = () => {
     setError('');
-    
+
     // 기본 admin 계정 체크
     if (username === 'admin' && password === '123456') {
-      onLogin({ 
-        username: 'admin', 
+      onLogin({
+        username: 'admin',
         avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop',
         team: KBO_TEAMS[0],
       });
@@ -29,7 +29,7 @@ export default function LoginPage({ onLogin }) {
     // 로컬스토리지에서 사용자 확인
     const users = JSON.parse(localStorage.getItem('users') || '[]');
     const user = users.find(u => u.username === username && u.password === password);
-    
+
     if (user) {
       onLogin({ username: user.username, avatar: user.avatar, team: user.team });
     } else {
@@ -78,7 +78,7 @@ export default function LoginPage({ onLogin }) {
 
     users.push(newUser);
     localStorage.setItem('users', JSON.stringify(users));
-    
+
     // 자동 로그인
     onLogin({ username: newUser.username, avatar: newUser.avatar, team: newUser.team });
   };
@@ -224,11 +224,10 @@ export default function LoginPage({ onLogin }) {
                         type="button"
                         onClick={() => setSelectedTeam(team)}
                         whileTap={{ scale: 0.95 }}
-                        className={`p-3 rounded-xl border-2 transition-all ${
-                          selectedTeam?.id === team.id
-                            ? 'border-white bg-white/30'
-                            : 'border-white/30 bg-white/10 hover:bg-white/20'
-                        }`}
+                        className={`p-3 rounded-xl border-2 transition-all ${selectedTeam?.id === team.id
+                          ? 'border-white bg-white/30'
+                          : 'border-white/30 bg-white/10 hover:bg-white/20'
+                          }`}
                       >
                         <div className="text-3xl mb-1">{team.emoji}</div>
                         <div className="text-white text-sm">{team.name}</div>
@@ -292,13 +291,16 @@ export default function LoginPage({ onLogin }) {
               transition={{ delay: 0.5 }}
               className="mt-6 pt-6 border-t border-white/20"
             >
-              <button
+              <motion.button
                 type="button"
                 onClick={() => {
                   setUsername('admin');
                   setPassword('123456');
                 }}
-                className="w-full bg-white/10 hover:bg-white/20 rounded-xl p-4 text-center transition-colors group"
+                whileHover={{ scale: 1.03, backgroundColor: 'rgba(255,255,255,0.15)' }}
+                whileTap={{ scale: 0.97, backgroundColor: 'rgba(255,255,255,0.25)' }}
+                transition={{ type: 'spring', stiffness: 250, damping: 15 }}
+                className="w-full bg-white/10 rounded-xl p-4 text-center transition-colors group shadow-md hover:shadow-lg"
               >
                 <div className="text-white/80 group-hover:text-white mb-2 flex items-center justify-center gap-2">
                   <Sparkles className="w-4 h-4" />
@@ -306,7 +308,7 @@ export default function LoginPage({ onLogin }) {
                 </div>
                 <p className="text-white/60 text-sm">ID: admin</p>
                 <p className="text-white/60 text-sm">PW: 123456</p>
-              </button>
+              </motion.button>
             </motion.div>
           )}
         </div>

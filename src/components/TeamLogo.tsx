@@ -19,11 +19,12 @@ interface Team {
 
 interface TeamLogoProps {
   team: Team;
-  size?: "sm" | "md" | "lg" | "xl";
+  size?: "xs" | "sm" | "md" | "lg" | "xl";
 }
 
 export default function TeamLogo({ team, size = "md" }: TeamLogoProps) {
   const sizeClasses = {
+    xs: "w-4 h-4", // 👈 이 줄 추가
     sm: "w-8 h-8 text-xs",
     md: "w-12 h-12 text-sm",
     lg: "w-16 h-16 text-base",
@@ -56,9 +57,8 @@ export default function TeamLogo({ team, size = "md" }: TeamLogoProps) {
   return (
     <motion.div
       whileHover={{ scale: 1.1 }}
-      className={`${sizeClasses[size]} rounded-full bg-gradient-to-br ${
-        team.gradient || "from-gray-100 to-gray-300"
-      } flex items-center justify-center relative overflow-hidden shadow-lg`}
+      className={`${sizeClasses[size]} rounded-full bg-gradient-to-br ${team.gradient || "from-gray-100 to-gray-300"
+        } flex items-center justify-center relative overflow-hidden shadow-lg`}
     >
       <div className="absolute inset-0 bg-white/10" />
       {logoImage ? (

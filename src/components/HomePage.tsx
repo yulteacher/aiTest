@@ -10,7 +10,7 @@ export default function HomePage({ user, onNavigate, onPostClick, onPollClick, o
   useEffect(() => {
     const savedPosts = localStorage.getItem('posts');
     const savedPolls = localStorage.getItem('polls');
-    
+
     if (savedPosts) {
       setPosts(JSON.parse(savedPosts));
     }
@@ -82,7 +82,7 @@ export default function HomePage({ user, onNavigate, onPostClick, onPollClick, o
               <TrendingUp className="w-5 h-5 text-teal-600 dark:text-[#00d5be]" />
               인기 투표
             </h3>
-            <button 
+            <button
               onClick={() => onNavigate && onNavigate('polls')}
               className="text-teal-600 dark:text-teal-400 flex items-center gap-1 hover:text-teal-700 dark:hover:text-teal-300 transition-colors"
             >
@@ -90,7 +90,7 @@ export default function HomePage({ user, onNavigate, onPostClick, onPollClick, o
               <ChevronRight className="w-4 h-4" />
             </button>
           </div>
-          
+
           <div className="space-y-3">
             {trendingPolls.map((poll, index) => (
               <motion.div
@@ -138,7 +138,7 @@ export default function HomePage({ user, onNavigate, onPostClick, onPollClick, o
               <Heart className="w-5 h-5 text-cyan-500 dark:text-cyan-400" />
               최근 게시글
             </h3>
-            <button 
+            <button
               onClick={() => onNavigate && onNavigate('feed')}
               className="text-teal-600 dark:text-teal-400 flex items-center gap-1 hover:text-teal-700 dark:hover:text-teal-300 transition-colors"
             >
@@ -208,7 +208,7 @@ export default function HomePage({ user, onNavigate, onPostClick, onPollClick, o
         transition={{ delay: 0.8 }}
         className="grid grid-cols-2 gap-3"
       >
-        <motion.button 
+        <motion.button
           whileTap={{ scale: 0.95 }}
           onClick={() => onChatOpen && onChatOpen()}
           className="glass-card glass-card-hover rounded-2xl p-6 text-center border border-sky-200/50 dark:border-sky-700/30"
@@ -216,7 +216,7 @@ export default function HomePage({ user, onNavigate, onPostClick, onPollClick, o
           <MessageCircle className="w-8 h-8 text-sky-600 dark:text-sky-400 mx-auto mb-2" />
           <div className="text-gray-900 dark:text-gray-100">AI 채팅</div>
         </motion.button>
-        <motion.button 
+        <motion.button
           whileTap={{ scale: 0.95 }}
           onClick={() => onNavigate && onNavigate('polls')}
           className="glass-card glass-card-hover rounded-2xl p-6 text-center border border-teal-200/50 dark:border-teal-700/30"

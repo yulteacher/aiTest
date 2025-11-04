@@ -15,13 +15,13 @@ export const dummyPostsData = {
     { content: '오늘 경기 진짜 명승부였다 ⚾ 9회말 역전승!! 소름돋았어요', hasImage: true },
     { content: '우리 팀 에이스 투수 7이닝 무실점! 👏 시즌 최고의 피칭이었어요', hasImage: false },
     { content: '첫 직관 다녀왔어요! 야구장 분위기 너무 좋다 🏟️', hasImage: true },
-    { content: '오늘 홈런 3개 나왔다!! 타선 폭발하는거 보니 기분 좋네요 💪', hasImage: false },
-    { content: '수비 실수로 아쉽게 졌지만 다음 경기는 꼭 이길 수 있을 거예요!', hasImage: false },
+    { content: '오늘 홈런 3개 나왔다!! 타선 폭발하는거 보니 기분 좋네요 💪', hasImage: true },
+    { content: '수비 실수로 아쉽게 졌지만 다음 경기는 꼭 이길 수 있을 거예요!', hasImage: true },
     { content: '신인 선수 데뷔전 축하합니다! 앞으로가 더 기대되네요 🎉', hasImage: true },
     { content: '오늘 경기 MVP는 단연 우리 4번 타자! 결승타 멋있었어요 ⚡', hasImage: false },
     { content: '야구장에서 먹는 치맥이 최고죠 🍗🍺 경기 보면서 응원하는 재미!', hasImage: true },
-    { content: '투수 교체 타이밍이 아쉬웠지만 감독님 믿고 다음 경기도 응원합니다!', hasImage: false },
-    { content: '시즌 마지막까지 파이팅! 우리 팀 포스트시즌 가자!! 🔥', hasImage: false }
+    { content: '투수 교체 타이밍이 아쉬웠지만 감독님 믿고 다음 경기도 응원합니다!', hasImage: true },
+    { content: '시즌 마지막까지 파이팅! 우리 팀 포스트시즌 가자!! 🔥', hasImage: true }
   ],
   avatars: [
     'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop',
@@ -30,11 +30,17 @@ export const dummyPostsData = {
     'https://images.unsplash.com/photo-1527980965255-d3b416303d12?w=100&h=100&fit=crop',
     'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop'
   ],
-  images: [
-    'https://images.unsplash.com/photo-1566577134770-3d85bb3a9cc4?w=600&h=400&fit=crop',
-    'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=600&h=400&fit=crop',
-    'https://images.unsplash.com/photo-1575870350146-b9b0ae97e2c7?w=600&h=400&fit=crop',
-    'https://images.unsplash.com/photo-1560272564-c83b66b1ad12?w=600&h=400&fit=crop'
-  ],
+  images: {
+    doosan: ['/images/feed_doosan1.png', '/images/feed_doosan2.png'],
+    samsung: ['/images/feed_samsung1.png', '/images/feed_samsung2.png'],
+    lg: ['/images/feed_lg1.png', '/images/feed_lg2.png'],
+    kt: ['/images/feed_kt1.png', '/images/feed_kt2.png'],
+    ssg: ['/images/feed_ssg1.png', '/images/feed_ssg2.png'],
+    lotte: ['/images/feed_lotte1.png', '/images/feed_lotte2.png'],
+    hanwha: ['/images/feed_hanwha1.png', '/images/feed_hanwha2.png'],
+    nc: ['/images/feed_nc1.png', '/images/feed_nc2.png'],
+    kiwoom: ['/images/feed_kiwoom1.png', '/images/feed_kiwoom2.png'],
+    kia: ['/images/feed_kia1.png', '/images/feed_kia2.png']
+  },
   timestamps: ['방금 전', '10분 전', '30분 전', '1시간 전', '2시간 전', '5시간 전', '12시간 전', '1일 전', '2일 전', '3일 전']
 };
