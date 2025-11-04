@@ -182,7 +182,7 @@ export default function ChatPage({ isFloating = false }) {
             whileTap={{ scale: 0.9 }}
             onClick={handleSend}
             disabled={!input.trim()}
-            className="bg-gradient-to-r from-teal-500 to-cyan-500 text-white p-3 rounded-full hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            className="bg-gradient-to-r from-teal-500 to-cyan-500 dark:from-[#00d5be] dark:to-[#00b8db] text-white dark:text-[#0f1729] p-3 rounded-full hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Send className="w-5 h-5" />
           </motion.button>

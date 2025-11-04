@@ -113,13 +113,13 @@ export default function MyPage({ user, onLogout, onUpdateUser }) {
     const users = JSON.parse(localStorage.getItem('users') || '[]');
     const updatedUsers = users.map(u => 
       u.username === user.username 
-        ? { ...u, avatar: editedUser.avatar, team: editedUser.team }
+        ? { ...u, avatar: editedUser.avatar, team: editedUser.team, bio: editedUser.bio }
         : u
     );
     localStorage.setItem('users', JSON.stringify(updatedUsers));
 
     // 현재 세션의 사용자 정보 업데이트 (App.tsx의 user state 업데이트)
-    const updatedCurrentUser = { ...user, avatar: editedUser.avatar, team: editedUser.team };
+    const updatedCurrentUser = { ...user, avatar: editedUser.avatar, team: editedUser.team, bio: editedUser.bio };
     if (onUpdateUser) {
       onUpdateUser(updatedCurrentUser);
     }
@@ -134,12 +134,12 @@ export default function MyPage({ user, onLogout, onUpdateUser }) {
   return (
     <div className="p-4 space-y-4">
       {/* 탭 전환 */}
-      <div className="flex gap-2 bg-white dark:bg-slate-800 rounded-2xl p-2 shadow-sm border border-teal-100 dark:border-teal-400/20">
+      <div className="flex gap-2 glass-card rounded-2xl p-2">
         <button
           onClick={() => setActiveSection('profile')}
           className={`flex-1 py-3 rounded-xl transition-all text-center ${
             activeSection === 'profile'
-              ? 'bg-gradient-to-r from-teal-500 to-cyan-500 text-white'
+              ? 'bg-gradient-to-r from-teal-500 to-cyan-500 dark:from-[#00d5be] dark:to-[#00b8db] text-white'
               : 'text-gray-600 dark:text-gray-400'
           }`}
         >
@@ -149,7 +149,7 @@ export default function MyPage({ user, onLogout, onUpdateUser }) {
           onClick={() => setActiveSection('notifications')}
           className={`flex-1 py-3 rounded-xl transition-all relative text-center ${
             activeSection === 'notifications'
-              ? 'bg-gradient-to-r from-teal-500 to-cyan-500 text-white'
+              ? 'bg-gradient-to-r from-teal-500 to-cyan-500 dark:from-[#00d5be] dark:to-[#00b8db] text-white'
               : 'text-gray-600 dark:text-gray-400'
           }`}
         >
@@ -174,6 +174,11 @@ export default function MyPage({ user, onLogout, onUpdateUser }) {
             {/* 프로필 카드 */}
             <div 
               className="bg-gradient-to-br from-teal-500 via-cyan-500 to-sky-600 rounded-2xl p-6 text-white shadow-2xl"
+              style={{
+                background: typeof window !== 'undefined' && document.documentElement.classList.contains('dark')
+                  ? 'linear-gradient(135deg, rgba(20, 233, 210, 0.40) 0%, rgba(36, 220, 255, 0.40) 50%, rgba(56, 182, 255, 0.40) 100%)'
+                  : undefined
+              }}
             >
               <div className="flex flex-col items-center">
                 {isEditingProfile ? (
@@ -234,29 +239,42 @@ export default function MyPage({ user, onLogout, onUpdateUser }) {
                   </div>
                 )}
                 
-                <p className="text-white/90 text-center mt-3 text-sm">
-                  KBO를 사랑하는 열정적인 야구팬입니다! ⚾
-                </p>
+                {isEditingProfile ? (
+                  <div className="mt-3 w-full max-w-xs">
+                    <label className="block text-white/80 text-sm mb-2">소개</label>
+                    <textarea
+                      value={editedUser?.bio || ''}
+                      onChange={(e) => setEditedUser({ ...editedUser, bio: e.target.value })}
+                      placeholder="자신을 소개해주세요"
+                      rows={3}
+                      className="w-full bg-white/20 text-white rounded-xl px-4 py-2 border border-white/30 focus:outline-none focus:ring-2 focus:ring-white/50 placeholder:text-white/50 resize-none"
+                    />
+                  </div>
+                ) : (
+                  <p className="text-white/90 text-center mt-3 text-sm">
+                    {user?.bio || 'KBO를 사랑하는 열정적인 야구팬입니다! ⚾'}
+                  </p>
+                )}
 
                 {/* 프로필 수정 버튼 */}
-                <div className="mt-4 flex gap-2">
+                <div className="mt-4 flex gap-2 justify-center">
                   {isEditingProfile ? (
                     <>
                       <motion.button
                         whileTap={{ scale: 0.95 }}
                         onClick={() => {
                           setIsEditingProfile(false);
-                          setEditedUser({ ...user });
+                          setEditedUser({ ...user, bio: user.bio || '' });
                           setNewProfileImage(null);
                         }}
-                        className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-xl transition-colors"
+                        className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-xl transition-colors text-white"
                       >
                         취소
                       </motion.button>
                       <motion.button
                         whileTap={{ scale: 0.95 }}
                         onClick={handleSaveProfile}
-                        className="px-4 py-2 bg-white hover:bg-white/90 text-teal-700 rounded-xl transition-colors flex items-center gap-2"
+                        className="px-4 py-2 bg-white hover:bg-white/90 text-teal-700 dark:text-teal-700 rounded-xl transition-colors flex items-center gap-2"
                       >
                         <Check className="w-4 h-4" />
                         저장
@@ -265,8 +283,11 @@ export default function MyPage({ user, onLogout, onUpdateUser }) {
                   ) : (
                     <motion.button
                       whileTap={{ scale: 0.95 }}
-                      onClick={() => setIsEditingProfile(true)}
-                      className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-xl transition-colors flex items-center gap-2"
+                      onClick={() => {
+                        setEditedUser({ ...user, bio: user.bio || '' });
+                        setIsEditingProfile(true);
+                      }}
+                      className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-xl transition-colors flex items-center gap-2 text-white"
                     >
                       <Edit2 className="w-4 h-4" />
                       프로필 수정
@@ -297,22 +318,16 @@ export default function MyPage({ user, onLogout, onUpdateUser }) {
             </div>
 
             {/* 메뉴 */}
-            <div className="glass-card rounded-2xl overflow-hidden border border-teal-100/50 dark:border-teal-400/20">
-              <button className="w-full flex items-center gap-3 px-4 py-3 hover:bg-teal-50 dark:hover:bg-teal-900/20 transition-all border-b border-gray-100 dark:border-gray-700">
-                <div className="w-10 h-10 rounded-full bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center">
-                  <Edit2 className="w-5 h-5 text-teal-600 dark:text-teal-400" />
-                </div>
-                <span className="text-gray-900 dark:text-gray-100">프로필 수정</span>
-              </button>
-              <button className="w-full flex items-center gap-3 px-4 py-3 hover:bg-teal-50 dark:hover:bg-teal-900/20 transition-all border-b border-gray-100 dark:border-gray-700">
-                <div className="w-10 h-10 rounded-full bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center">
-                  <Settings className="w-5 h-5 text-teal-600 dark:text-teal-400" />
+            <div className="glass-card rounded-2xl overflow-hidden border border-teal-100/50 dark:border-[#00d5be]/20">
+              <button className="w-full flex items-center gap-3 px-4 py-3 hover:bg-teal-50 dark:hover:bg-[#00d5be]/10 transition-all border-b border-gray-100 dark:border-gray-700/50">
+                <div className="w-10 h-10 rounded-full bg-teal-100 dark:bg-[#00d5be]/20 flex items-center justify-center">
+                  <Settings className="w-5 h-5 text-teal-600 dark:text-[#00d5be]" />
                 </div>
                 <span className="text-gray-900 dark:text-gray-100">설정</span>
               </button>
               <button
                 onClick={onLogout}
-                className="w-full flex items-center gap-3 px-4 py-3 hover:bg-teal-50 dark:hover:bg-teal-900/20 transition-all"
+                className="w-full flex items-center gap-3 px-4 py-3 hover:bg-teal-50 dark:hover:bg-[#00d5be]/10 transition-all"
               >
                 <div className="w-10 h-10 rounded-full bg-rose-100 dark:bg-rose-900/30 flex items-center justify-center">
                   <LogOut className="w-5 h-5 text-rose-600 dark:text-rose-400" />
@@ -322,7 +337,7 @@ export default function MyPage({ user, onLogout, onUpdateUser }) {
             </div>
 
             {/* 배지 */}
-            <div className="glass-card rounded-2xl p-5 border border-teal-100/50 dark:border-teal-400/20">
+            <div className="glass-card rounded-2xl p-5 border border-teal-100/50 dark:border-[#00d5be]/20">
               <h3 className="text-gray-900 dark:text-gray-100 mb-4 font-medium">내 배지</h3>
               <div className="grid grid-cols-4 gap-3">
                 {['⚾', '🏆', '⭐', '🔥', '👑', '💪', '🎯', '⚡'].map((badge, index) => (
@@ -332,7 +347,7 @@ export default function MyPage({ user, onLogout, onUpdateUser }) {
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: 0.4 + index * 0.05 }}
                     whileTap={{ scale: 0.9 }}
-                    className="aspect-square bg-gradient-to-br from-teal-100 to-cyan-100 dark:from-teal-900/30 dark:to-cyan-900/30 rounded-xl flex items-center justify-center text-2xl cursor-pointer"
+                    className="aspect-square bg-gradient-to-br from-teal-100 to-cyan-100 dark:from-[#00d5be]/20 dark:to-[#00b8db]/20 rounded-xl flex items-center justify-center text-2xl cursor-pointer"
                   >
                     {badge}
                   </motion.div>
@@ -341,20 +356,20 @@ export default function MyPage({ user, onLogout, onUpdateUser }) {
             </div>
 
             {/* 레벨 진행바 */}
-            <div className="bg-gradient-to-br from-teal-50 to-cyan-50 dark:from-teal-900/20 dark:to-cyan-900/20 rounded-2xl p-5 shadow-sm border border-teal-200 dark:border-teal-700">
+            <div className="bg-gradient-to-br from-teal-50 to-cyan-50 dark:from-[#00d5be]/10 dark:to-[#00b8db]/10 rounded-2xl p-5 shadow-sm border border-teal-200 dark:border-[#00d5be]/30">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-gray-900 dark:text-gray-100 flex items-center gap-2 font-medium">
-                  <Zap className="w-5 h-5 text-teal-500" />
+                  <Zap className="w-5 h-5 text-teal-500 dark:text-[#00d5be]" />
                   레벨 7
                 </h3>
                 <span className="text-sm text-gray-600 dark:text-gray-400">75%</span>
               </div>
-              <div className="h-2.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+              <div className="h-2.5 bg-gray-200 dark:bg-gray-700/50 rounded-full overflow-hidden">
                 <motion.div
                   initial={{ width: 0 }}
                   animate={{ width: '75%' }}
                   transition={{ delay: 0.5, duration: 1, ease: 'easeOut' }}
-                  className="h-full bg-gradient-to-r from-teal-400 to-cyan-500 rounded-full"
+                  className="h-full bg-gradient-to-r from-teal-400 to-cyan-500 dark:from-[#00d5be] dark:to-[#00b8db] rounded-full"
                 />
               </div>
               <p className="text-sm text-gray-600 dark:text-gray-400 mt-3">
@@ -375,7 +390,7 @@ export default function MyPage({ user, onLogout, onUpdateUser }) {
               <h2 className="text-gray-900 dark:text-gray-100">알림</h2>
               <button
                 onClick={markAllAsRead}
-                className="text-teal-600 dark:text-teal-400 hover:underline"
+                className="text-teal-600 dark:text-[#00d5be] hover:underline"
               >
                 모두 읽음
               </button>
@@ -392,16 +407,17 @@ export default function MyPage({ user, onLogout, onUpdateUser }) {
                     exit={{ opacity: 0, x: 100, height: 0, marginBottom: 0 }}
                     transition={{ delay: index * 0.05 }}
                     onClick={() => markAsRead(notif.id)}
-                    className={`flex items-start gap-3 p-4 rounded-xl cursor-pointer transition-all relative overflow-hidden border ${
+                    className={`flex items-start gap-3 p-4 rounded-xl cursor-pointer transition-all relative overflow-hidden border touch-manipulation ${
                       notif.read
                         ? 'glass-card border-gray-200/50 dark:border-gray-700/30'
-                        : 'glass-card border-teal-200/70 dark:border-teal-700/50 bg-gradient-to-r from-teal-50/30 to-cyan-50/30 dark:from-teal-900/10 dark:to-cyan-900/10'
+                        : 'glass-card border-teal-200/70 dark:border-[#00d5be]/30 bg-gradient-to-r from-teal-50/30 to-cyan-50/30 dark:from-[#00d5be]/5 dark:to-[#00b8db]/5'
                     }`}
+                    style={{ WebkitTapHighlightColor: 'transparent' }}
                   >
                     <img
                       src={notif.avatar}
                       alt={notif.user}
-                      className="w-11 h-11 rounded-full flex-shrink-0 ring-2 ring-teal-200 dark:ring-teal-400/30"
+                      className="w-11 h-11 rounded-full flex-shrink-0 ring-2 ring-teal-200 dark:ring-[#00d5be]/30"
                     />
                     
                     <div className="flex-1 min-w-0">
@@ -423,7 +439,7 @@ export default function MyPage({ user, onLogout, onUpdateUser }) {
                     </div>
 
                     {!notif.read && (
-                      <div className="w-2 h-2 bg-teal-600 rounded-full flex-shrink-0 mt-2" />
+                      <div className="w-2 h-2 bg-teal-600 dark:bg-[#00d5be] rounded-full flex-shrink-0 mt-2" />
                     )}
 
                     {/* 삭제 버튼 */}
@@ -432,9 +448,9 @@ export default function MyPage({ user, onLogout, onUpdateUser }) {
                         e.stopPropagation();
                         dismissNotification(notif.id);
                       }}
-                      className="opacity-0 hover:opacity-100 transition-opacity p-1 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-full"
+                      className="p-1.5 bg-red-100 dark:bg-red-900/30 hover:bg-red-200 dark:hover:bg-red-900/50 rounded-full transition-colors touch-manipulation flex-shrink-0"
                     >
-                      <X className="w-4 h-4 text-red-600" />
+                      <X className="w-3.5 h-3.5 text-red-600 dark:text-red-400" />
                     </button>
                   </motion.div>
                 ))}

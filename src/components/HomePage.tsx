@@ -58,7 +58,7 @@ export default function HomePage({ user, onNavigate, onPostClick, onPollClick, o
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: index * 0.1 }}
-              className="bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-md dark:shadow-teal-500/10 text-center border border-teal-100 dark:border-teal-400/20"
+              className="glass-card glass-card-hover rounded-2xl p-4 text-center"
             >
               <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${stat.color} flex items-center justify-center mx-auto mb-2 shadow-sm`}>
                 <Icon className="w-5 h-5 text-white" />
@@ -79,7 +79,7 @@ export default function HomePage({ user, onNavigate, onPostClick, onPollClick, o
         >
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-gray-900 dark:text-gray-100 flex items-center gap-2">
-              <TrendingUp className="w-5 h-5 text-teal-600 dark:text-teal-400" />
+              <TrendingUp className="w-5 h-5 text-teal-600 dark:text-[#00d5be]" />
               인기 투표
             </h3>
             <button 
@@ -103,7 +103,7 @@ export default function HomePage({ user, onNavigate, onPostClick, onPollClick, o
                     onPollClick(poll.id);
                   }
                 }}
-                className="bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-md dark:shadow-teal-500/10 cursor-pointer hover:shadow-lg dark:hover:shadow-teal-500/20 transition-all border border-teal-100 dark:border-teal-400/20"
+                className="glass-card glass-card-hover rounded-2xl p-4 cursor-pointer transition-all"
               >
                 <div className="flex items-center gap-3 mb-3">
                   <img

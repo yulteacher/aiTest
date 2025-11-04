@@ -262,11 +262,11 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-teal-50 to-sky-50 dark:bg-gradient-to-br dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 transition-colors">
-      {/* 배경 그라디언트 (정적) */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden opacity-30">
-        <div className="absolute -top-1/2 -left-1/2 w-full h-full bg-gradient-to-br from-teal-400/20 to-cyan-400/20 dark:from-teal-500/10 dark:to-cyan-500/10 rounded-full blur-3xl" />
-        <div className="absolute -bottom-1/2 -right-1/2 w-full h-full bg-gradient-to-tl from-cyan-400/20 to-sky-400/20 dark:from-cyan-500/10 dark:to-sky-500/10 rounded-full blur-3xl" />
+    <div className="min-h-screen transition-colors">
+      {/* 배경 그라디언트 */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden opacity-40 dark:opacity-30">
+        <div className="absolute -top-1/2 -left-1/2 w-full h-full bg-gradient-to-br from-teal-400/20 to-cyan-400/20 dark:from-teal-400/30 dark:to-cyan-400/30 rounded-full blur-3xl" />
+        <div className="absolute -bottom-1/2 -right-1/2 w-full h-full bg-gradient-to-tl from-cyan-400/20 to-sky-400/20 dark:from-cyan-400/30 dark:to-teal-400/30 rounded-full blur-3xl" />
       </div>
 
       {/* 헤더 - 통일된 헤더 */}
@@ -274,7 +274,7 @@ export default function App() {
         initial={{ y: -100 }}
         animate={{ y: 0 }}
         transition={{ type: 'spring', stiffness: 100 }}
-        className="fixed top-0 left-0 right-0 bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl border-b border-teal-200/50 dark:border-teal-400/20 z-50 transition-colors shadow-sm dark:shadow-teal-500/10"
+        className="fixed top-0 left-0 right-0 bg-white/80 dark:bg-[#1d293d]/80 backdrop-blur-xl border-b border-teal-200/50 dark:border-[#00d5be]/30 z-50 transition-colors shadow-sm dark:shadow-[#00d5be]/10"
       >
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between relative">
           {/* 왼쪽 영역 - 뒤로가기 버튼 */}
@@ -300,7 +300,7 @@ export default function App() {
           </div>
           
           {/* 중앙 영역 - 제목 */}
-          <h1 className="absolute left-1/2 -translate-x-1/2 text-slate-700 dark:text-slate-400 flex items-center gap-2">
+          <h1 className="absolute left-1/2 -translate-x-1/2 text-slate-700 dark:text-[#e2e8f0] flex items-center gap-2">
             {selectedPostId ? (
               '게시글'
             ) : selectedPollId ? (
@@ -321,7 +321,7 @@ export default function App() {
           {/* 오른쪽 영역 - 다크모드 토글 */}
           <motion.button
             onClick={toggleDarkMode}
-            className="p-2 rounded-full hover:bg-teal-100 dark:hover:bg-teal-500/20 transition-colors"
+            className="p-2 rounded-full hover:bg-teal-100 dark:hover:bg-[#00d5be]/20 transition-colors"
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
           >
@@ -334,7 +334,7 @@ export default function App() {
                   exit={{ rotate: 90, scale: 0 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <Sun className="w-5 h-5 text-teal-400" />
+                  <Sun className="w-5 h-5 text-[#00d5be]" />
                 </motion.div>
               ) : (
                 <motion.div
@@ -373,7 +373,7 @@ export default function App() {
         animate={{ scale: 1 }}
         transition={{ delay: 0.5, type: 'spring', stiffness: 200 }}
         onClick={() => setShowChat(!showChat)}
-        className="fixed bottom-24 right-6 bg-gradient-to-r from-teal-500 to-cyan-500 dark:from-teal-400 dark:to-cyan-400 text-white dark:text-slate-900 rounded-full p-4 shadow-lg hover:shadow-xl dark:shadow-teal-500/30 transition-all z-40"
+        className="fixed bottom-24 right-6 bg-gradient-to-r from-teal-500 to-cyan-500 dark:from-[#00d5be] dark:to-[#00b8db] text-white rounded-full p-4 shadow-lg hover:shadow-xl dark:shadow-[#00d5be]/40 transition-all z-40"
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
       >
@@ -414,7 +414,7 @@ export default function App() {
         initial={{ y: 100 }}
         animate={{ y: 0 }}
         transition={{ type: 'spring', stiffness: 100, delay: 0.2 }}
-        className="fixed bottom-0 left-0 right-0 bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl border-t border-teal-200/50 dark:border-teal-400/20 z-50 transition-colors shadow-lg dark:shadow-teal-500/10"
+        className="fixed bottom-0 left-0 right-0 bg-white/80 dark:bg-[#1d293d]/80 backdrop-blur-xl border-t border-[rgba(150,247,228,0.5)] dark:border-[#00d5be]/30 z-50 transition-colors shadow-lg dark:shadow-[#00d5be]/10"
       >
         <div className="max-w-2xl mx-auto px-2 py-2">
           <div className="flex items-center justify-around">
@@ -425,7 +425,7 @@ export default function App() {
                 <motion.button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className="flex flex-col items-center gap-1 px-4 py-2 rounded-lg transition-colors relative"
+                  className="flex flex-col items-center gap-1 px-4 py-2 rounded-2xl transition-colors relative"
                   whileTap={{ scale: 0.95 }}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -434,15 +434,15 @@ export default function App() {
                   <Icon
                     className={`w-6 h-6 transition-colors ${
                       isActive
-                        ? 'text-teal-600 dark:text-teal-400'
-                        : 'text-gray-400 dark:text-gray-500'
+                        ? 'text-white dark:text-[#00d5be]'
+                        : 'text-[#01B9D1] dark:text-gray-500'
                     }`}
                   />
                   <span
                     className={`text-xs transition-colors ${
                       isActive
-                        ? 'text-teal-600 dark:text-teal-400'
-                        : 'text-gray-400 dark:text-gray-500'
+                        ? 'text-white dark:text-[#00d5be]'
+                        : 'text-[#01B9D1] dark:text-gray-500'
                     }`}
                   >
                     {tab.label}
@@ -450,7 +450,7 @@ export default function App() {
                   {isActive && (
                     <motion.div
                       layoutId="activeTab"
-                      className="absolute inset-0 bg-teal-100 dark:bg-teal-500/20 rounded-lg -z-10"
+                      className="absolute inset-0 bg-gradient-to-r from-[#00BBA7] to-[#00B8DB] dark:bg-gradient-to-r dark:from-[#00d5be]/20 dark:to-[#00d5be]/20 rounded-2xl -z-10"
                       transition={{ type: 'spring', stiffness: 300, damping: 30 }}
                     />
                   )}

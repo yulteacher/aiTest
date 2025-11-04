@@ -29,14 +29,14 @@ export default function TeamSelector({ selectedTeam, onSelectTeam, showAll = tru
         {isOpen && (
           <>
             <div 
-              className="fixed inset-0 z-40" 
+              className="fixed inset-0 z-[60]" 
               onClick={() => setIsOpen(false)}
             />
             <motion.div
               initial={{ opacity: 0, y: -10, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -10, scale: 0.95 }}
-              className="absolute top-full mt-2 left-0 bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-2 z-50 min-w-[200px]"
+              className="absolute top-full mt-2 left-0 bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-2 z-[70] min-w-[200px]"
             >
               {showAll && (
                 <button

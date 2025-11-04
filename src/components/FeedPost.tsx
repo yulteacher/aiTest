@@ -36,11 +36,10 @@ export function FeedPost({ post, onLike }: FeedPostProps) {
         <div className="flex items-center gap-6 pt-3 border-t">
           <button
             onClick={() => onLike(post.id)}
-            className={`flex items-center gap-2 transition-colors ${
-              post.liked
+            className={`flex items-center gap-2 transition-colors ${post.liked
                 ? 'text-red-600'
                 : 'text-gray-600 hover:text-red-600'
-            }`}
+              }`}
           >
             <Heart
               className="w-5 h-5"

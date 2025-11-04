@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 export default function FeedPage({ onPostClick }) {
   const [posts, setPosts] = useState([]);
   const [newPost, setNewPost] = useState('');
+  const [newPostImage, setNewPostImage] = useState('');
   const [showCreatePost, setShowCreatePost] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [selectedTeam, setSelectedTeam] = useState(null); // 필터용
@@ -20,22 +21,35 @@ export default function FeedPage({ onPostClick }) {
   const [editTeam, setEditTeam] = useState(null);
 
   useEffect(() => {
+    const teams = [
+      { id: 'doosan', name: '두산 베어스', color: '#131230' },
+      { id: 'samsung', name: '삼성 라이온즈', color: '#074CA1' },
+      { id: 'lg', name: 'LG 트윈스', color: '#C30452' },
+      { id: 'kt', name: 'KT 위즈', color: '#000000' },
+      { id: 'ssg', name: 'SSG 랜더스', color: '#CE0E2D' },
+      { id: 'lotte', name: '롯데 자이언츠', color: '#041E42' },
+      { id: 'hanwha', name: '한화 이글스', color: '#FF6600' },
+      { id: 'nc', name: 'NC 다이노스', color: '#315288' },
+      { id: 'kiwoom', name: '키움 히어로즈', color: '#570514' },
+      { id: 'kia', name: 'KIA 타이거즈', color: '#EA0029' },
+    ];
+
     const savedPosts = localStorage.getItem('posts');
     if (savedPosts) {
-      setPosts(JSON.parse(savedPosts));
+      const parsedPosts = JSON.parse(savedPosts);
+      // team이 없는 게시글에 랜덤으로 team 할당
+      const updatedPosts = parsedPosts.map(post => {
+        if (!post.team) {
+          return {
+            ...post,
+            team: teams[Math.floor(Math.random() * teams.length)]
+          };
+        }
+        return post;
+      });
+      setPosts(updatedPosts);
+      localStorage.setItem('posts', JSON.stringify(updatedPosts));
     } else {
-      const teams = [
-        { id: 'doosan', name: '두산 베어스', color: '#131230' },
-        { id: 'samsung', name: '삼성 라이온즈', color: '#074CA1' },
-        { id: 'lg', name: 'LG 트윈스', color: '#C30452' },
-        { id: 'kt', name: 'KT 위즈', color: '#000000' },
-        { id: 'ssg', name: 'SSG 랜더스', color: '#CE0E2D' },
-        { id: 'lotte', name: '롯데 자이언츠', color: '#041E42' },
-        { id: 'hanwha', name: '한화 이글스', color: '#FF6600' },
-        { id: 'nc', name: 'NC 다이노스', color: '#315288' },
-        { id: 'kiwoom', name: '키움 히어로즈', color: '#570514' },
-        { id: 'kia', name: 'KIA 타이거즈', color: '#EA0029' },
-      ];
 
       const postTemplates = [
         { content: '오늘 경기 진짜 명승부였다 ⚾ 9회말 역전승!! 소름돋았어요', hasImage: true },
@@ -126,6 +140,17 @@ export default function FeedPage({ onPostClick }) {
     }
   };
 
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setNewPostImage(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleCreatePost = () => {
     if (!newPost.trim()) return;
 
@@ -135,6 +160,7 @@ export default function FeedPage({ onPostClick }) {
       avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop',
       content: newPost,
       team: newPostTeam,
+      image: newPostImage || undefined,
       likes: 0,
       timestamp: '방금 전',
       liked: false,
@@ -145,6 +171,7 @@ export default function FeedPage({ onPostClick }) {
     setPosts(updatedPosts);
     localStorage.setItem('posts', JSON.stringify(updatedPosts));
     setNewPost('');
+    setNewPostImage('');
     setNewPostTeam(null);
     setShowCreatePost(false);
     setSelectedTeam(null); // 필터를 전체로 리셋
@@ -193,15 +220,17 @@ export default function FeedPage({ onPostClick }) {
   return (
     <div className="p-4 space-y-4">
       {showConfetti && <Confetti />}
-      
+
       {/* 구단 필터 */}
-      <TeamSelector selectedTeam={selectedTeam} onSelectTeam={setSelectedTeam} showAll={true} />
+      <div className="relative z-30">
+        <TeamSelector selectedTeam={selectedTeam} onSelectTeam={setSelectedTeam} showAll={true} />
+      </div>
 
       {/* 게시글 작성 */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="glass-card rounded-2xl p-4"
+        className="glass-card rounded-2xl p-4 relative z-30"
       >
         {!showCreatePost ? (
           <motion.button
@@ -225,36 +254,60 @@ export default function FeedPage({ onPostClick }) {
               rows={3}
               autoFocus
             />
-            
+
             {/* 구단 선택 */}
             <div className="px-2">
-              <TeamSelector 
-                selectedTeam={newPostTeam} 
-                onSelectTeam={setNewPostTeam} 
+              <TeamSelector
+                selectedTeam={newPostTeam}
+                onSelectTeam={setNewPostTeam}
                 showAll={false}
                 label="구단 선택 (선택사항)"
               />
             </div>
 
+            {/* 이미지 미리보기 */}
+            {newPostImage && (
+              <div className="px-2 relative">
+                <ImageWithFallback
+                  src={newPostImage}
+                  alt="업로드된 이미지"
+                  className="w-full max-h-64 object-cover rounded-lg"
+                />
+                <button
+                  onClick={() => setNewPostImage('')}
+                  className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white p-1.5 rounded-full transition-colors"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            )}
+
             <div className="flex items-center justify-between">
-              <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors">
-                <ImageIcon className="w-5 h-5 text-gray-500" />
-              </button>
+              <label className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors cursor-pointer">
+                <ImageIcon className={`w-5 h-5 ${newPostImage ? 'text-teal-600 dark:text-[#00d5be]' : 'text-gray-500'}`} />
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="hidden"
+                />
+              </label>
               <div className="flex gap-2">
                 <button
                   onClick={() => {
                     setShowCreatePost(false);
                     setNewPost('');
+                    setNewPostImage('');
                     setNewPostTeam(null);
                   }}
-                  className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
+                  className="px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/10 rounded-full transition-colors"
                 >
                   취소
                 </button>
                 <button
                   onClick={handleCreatePost}
                   disabled={!newPost.trim()}
-                  className="px-4 py-2 bg-gradient-to-r from-slate-600 to-rose-500 text-white rounded-full hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                  className="px-4 py-2 bg-gradient-to-r from-teal-500 to-cyan-500 dark:from-[#00d5be] dark:to-[#00b8db] text-white rounded-full hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                 >
                   게시
                 </button>
@@ -296,7 +349,7 @@ function PostCard({ post, index, onLike, onDelete, onEdit, isEditing, editConten
     if (isEditing) {
       return;
     }
-    
+
     // 버튼이나 인터랙티브 요소를 클릭한 경우 무시
     const target = e.target;
     if (
@@ -306,7 +359,7 @@ function PostCard({ post, index, onLike, onDelete, onEdit, isEditing, editConten
     ) {
       return;
     }
-    
+
     if (onPostClick) {
       onPostClick(post.id);
     }
@@ -321,155 +374,154 @@ function PostCard({ post, index, onLike, onDelete, onEdit, isEditing, editConten
       onClick={handleCardClick}
     >
       <div className="p-4">
-          {/* 작성자 */}
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-3">
-              <TeamAvatar
-                team={post.team?.name}
-                src={post.avatar}
-                size="md"
-              />
-              <div>
-                <div className="font-medium text-gray-900 dark:text-gray-100">{post.author}</div>
-                <p className="text-xs text-gray-500 dark:text-gray-400">{post.timestamp}</p>
-              </div>
-            </div>
-            {isMyPost && !isEditing && (
-              <div className="flex gap-1">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    onEdit(post);
-                  }}
-                  className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors active:scale-95"
-                >
-                  <Edit2 className="w-4 h-4 text-gray-500 dark:text-gray-400" />
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    onDelete(post.id);
-                  }}
-                  className="p-2 hover:bg-red-100 dark:hover:bg-red-900/20 rounded-full transition-colors active:scale-95"
-                >
-                  <Trash2 className="w-4 h-4 text-red-500 dark:text-red-400" />
-                </button>
-              </div>
-            )}
-          </div>
-
-          {/* 내용 */}
-          {isEditing ? (
-            <div className="space-y-2 mb-3">
-              <textarea
-                value={editContent}
-                onChange={(e) => onEditContentChange(e.target.value)}
-                className="w-full bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg px-4 py-3 resize-none focus:outline-none focus:ring-2 focus:ring-slate-500"
-                rows={3}
-                autoFocus
-              />
-              
-              {/* 구단 선택 (수정 시) */}
-              <TeamSelector 
-                selectedTeam={editTeam} 
-                onSelectTeam={onEditTeamChange} 
-                showAll={false}
-                label="구단 선택 (선택사항)"
-              />
-              
-              <div className="flex gap-2 justify-end">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onCancelEdit();
-                  }}
-                  className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-                >
-                  취소
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onSaveEdit(post.id);
-                  }}
-                  className="px-4 py-2 bg-slate-600 text-white rounded-lg hover:bg-slate-700 transition-colors"
-                >
-                  저장
-                </button>
-              </div>
-            </div>
-          ) : (
-            <p className="text-gray-800 dark:text-gray-200 mb-3">{post.content}</p>
-          )}
-
-          {/* 이미지 */}
-          {post.image && !isEditing && (
-            <ImageWithFallback
-              src={post.image}
-              alt="Post"
-              className="w-full rounded-xl mb-3"
+        {/* 작성자 */}
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-3">
+            <TeamAvatar
+              team={post.team?.name}
+              src={post.avatar}
+              size="md"
             />
-          )}
-
-          {/* 액션 버튼 */}
-          {!isEditing && (
-            <div className="flex items-center gap-6 pt-3 border-t border-gray-100 dark:border-gray-700">
+            <div>
+              <div className="font-medium text-gray-900 dark:text-gray-100">{post.author}</div>
+              <p className="text-xs text-gray-500 dark:text-gray-400">{post.timestamp}</p>
+            </div>
+          </div>
+          {isMyPost && !isEditing && (
+            <div className="flex gap-1">
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   e.preventDefault();
-                  onLike(post.id);
+                  onEdit(post);
                 }}
-                className={`flex items-center gap-2 transition-colors active:scale-95 ${
-                  post.liked
-                    ? 'text-rose-500'
-                    : 'text-gray-600 dark:text-gray-400'
-                }`}
+                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors active:scale-95"
               >
-                <Heart
-                  className="w-5 h-5"
-                  fill={post.liked ? 'currentColor' : 'none'}
-                />
-                <span>{post.likes}</span>
+                <Edit2 className="w-4 h-4 text-gray-500 dark:text-gray-400" />
               </button>
-
-              <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-                <MessageCircle className="w-5 h-5" />
-                <span>{post.commentsList?.length || 0}</span>
-              </div>
-
-              <button 
+              <button
                 onClick={(e) => {
                   e.stopPropagation();
                   e.preventDefault();
-                  const shareText = `${post.author}: ${post.content}`;
-                  if (navigator.share) {
-                    navigator.share({ title: 'KBO 팬덤', text: shareText }).catch(() => {});
-                  } else {
-                    try {
-                      // Fallback for clipboard
-                      const textArea = document.createElement('textarea');
-                      textArea.value = shareText;
-                      textArea.style.position = 'fixed';
-                      textArea.style.left = '-999999px';
-                      document.body.appendChild(textArea);
-                      textArea.select();
-                      document.execCommand('copy');
-                      document.body.removeChild(textArea);
-                      toast.success('링크가 복사되었습니다!');
-                    } catch (err) {
-                      toast.error('복사에 실패했습니다');
-                    }
-                  }
+                  onDelete(post.id);
                 }}
-                className="flex items-center gap-2 text-gray-600 dark:text-gray-400 ml-auto active:scale-95 transition-all"
+                className="p-2 hover:bg-red-100 dark:hover:bg-red-900/20 rounded-full transition-colors active:scale-95"
               >
-                <Share2 className="w-5 h-5" />
+                <Trash2 className="w-4 h-4 text-red-500 dark:text-red-400" />
               </button>
             </div>
           )}
+        </div>
+
+        {/* 내용 */}
+        {isEditing ? (
+          <div className="space-y-2 mb-3">
+            <textarea
+              value={editContent}
+              onChange={(e) => onEditContentChange(e.target.value)}
+              className="w-full bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg px-4 py-3 resize-none focus:outline-none focus:ring-2 focus:ring-slate-500"
+              rows={3}
+              autoFocus
+            />
+
+            {/* 구단 선택 (수정 시) */}
+            <TeamSelector
+              selectedTeam={editTeam}
+              onSelectTeam={onEditTeamChange}
+              showAll={false}
+              label="구단 선택 (선택사항)"
+            />
+
+            <div className="flex gap-2 justify-end">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onCancelEdit();
+                }}
+                className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              >
+                취소
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onSaveEdit(post.id);
+                }}
+                className="px-4 py-2 bg-slate-600 text-white rounded-lg hover:bg-slate-700 transition-colors"
+              >
+                저장
+              </button>
+            </div>
+          </div>
+        ) : (
+          <p className="text-gray-800 dark:text-gray-200 mb-3">{post.content}</p>
+        )}
+
+        {/* 이미지 */}
+        {post.image && !isEditing && (
+          <ImageWithFallback
+            src={post.image}
+            alt="Post"
+            className="w-full rounded-xl mb-3"
+          />
+        )}
+
+        {/* 액션 버튼 */}
+        {!isEditing && (
+          <div className="flex items-center gap-6 pt-3 border-t border-gray-100 dark:border-gray-700">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                onLike(post.id);
+              }}
+              className={`flex items-center gap-2 transition-colors active:scale-95 ${post.liked
+                ? 'text-rose-500'
+                : 'text-gray-600 dark:text-gray-400'
+                }`}
+            >
+              <Heart
+                className="w-5 h-5"
+                fill={post.liked ? 'currentColor' : 'none'}
+              />
+              <span>{post.likes}</span>
+            </button>
+
+            <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+              <MessageCircle className="w-5 h-5" />
+              <span>{post.commentsList?.length || 0}</span>
+            </div>
+
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                const shareText = `${post.author}: ${post.content}`;
+                if (navigator.share) {
+                  navigator.share({ title: 'KBO 팬덤', text: shareText }).catch(() => { });
+                } else {
+                  try {
+                    // Fallback for clipboard
+                    const textArea = document.createElement('textarea');
+                    textArea.value = shareText;
+                    textArea.style.position = 'fixed';
+                    textArea.style.left = '-999999px';
+                    document.body.appendChild(textArea);
+                    textArea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textArea);
+                    toast.success('링크가 복사되었습니다!');
+                  } catch (err) {
+                    toast.error('복사에 실패했습니다');
+                  }
+                }
+              }}
+              className="flex items-center gap-2 text-gray-600 dark:text-gray-400 ml-auto active:scale-95 transition-all"
+            >
+              <Share2 className="w-5 h-5" />
+            </button>
+          </div>
+        )}
       </div>
     </motion.div>
   );

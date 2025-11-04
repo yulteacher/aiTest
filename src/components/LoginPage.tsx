@@ -292,14 +292,21 @@ export default function LoginPage({ onLogin }) {
               transition={{ delay: 0.5 }}
               className="mt-6 pt-6 border-t border-white/20"
             >
-              <div className="text-white/60 text-center mb-3">
-                <Sparkles className="w-4 h-4 inline mr-2" />
-                기본 계정으로 체험하기
-              </div>
-              <div className="bg-white/10 rounded-xl p-3 text-center">
-                <p className="text-white">ID: admin</p>
-                <p className="text-white">PW: 123456</p>
-              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setUsername('admin');
+                  setPassword('123456');
+                }}
+                className="w-full bg-white/10 hover:bg-white/20 rounded-xl p-4 text-center transition-colors group"
+              >
+                <div className="text-white/80 group-hover:text-white mb-2 flex items-center justify-center gap-2">
+                  <Sparkles className="w-4 h-4" />
+                  기본 계정으로 체험하기
+                </div>
+                <p className="text-white/60 text-sm">ID: admin</p>
+                <p className="text-white/60 text-sm">PW: 123456</p>
+              </button>
             </motion.div>
           )}
         </div>

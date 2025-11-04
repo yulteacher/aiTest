@@ -42,40 +42,40 @@
 }
 
 .dark {
-  --background: #0f172a;
-  --foreground: #f1f5f9;
+  --background: #0f1729;
+  --foreground: #e2e8f0;
   --card: #1e293b;
-  --card-foreground: #f1f5f9;
+  --card-foreground: #e2e8f0;
   --popover: #1e293b;
-  --popover-foreground: #f1f5f9;
-  --primary: #2dd4bf;
-  --primary-foreground: #134e4a;
-  --secondary: #334155;
-  --secondary-foreground: #f1f5f9;
-  --muted: #334155;
-  --muted-foreground: #94a3b8;
-  --accent: #1e293b;
-  --accent-foreground: #2dd4bf;
-  --destructive: #ef4444;
+  --popover-foreground: #e2e8f0;
+  --primary: #00d5be;
+  --primary-foreground: #0f172a;
+  --secondary: #1e293b;
+  --secondary-foreground: #e2e8f0;
+  --muted: #364153;
+  --muted-foreground: #99a1af;
+  --accent: #00b8db;
+  --accent-foreground: #e2e8f0;
+  --destructive: #ff637e;
   --destructive-foreground: #ffffff;
-  --border: rgba(45, 212, 191, 0.2);
-  --input: #334155;
-  --ring: #2dd4bf;
+  --border: rgba(0, 213, 190, 0.2);
+  --input: #1e293b;
+  --ring: #00d5be;
   --font-weight-medium: 500;
   --font-weight-normal: 400;
-  --chart-1: #2dd4bf;
-  --chart-2: #5eead4;
+  --chart-1: #00d5be;
+  --chart-2: #00b8db;
   --chart-3: #14b8a6;
   --chart-4: #0d9488;
   --chart-5: #0f766e;
-  --sidebar: #1e293b;
-  --sidebar-foreground: #f1f5f9;
-  --sidebar-primary: #2dd4bf;
-  --sidebar-primary-foreground: #134e4a;
-  --sidebar-accent: #334155;
-  --sidebar-accent-foreground: #f1f5f9;
-  --sidebar-border: rgba(45, 212, 191, 0.2);
-  --sidebar-ring: #2dd4bf;
+  --sidebar: #1d293d;
+  --sidebar-foreground: #e2e8f0;
+  --sidebar-primary: #00d5be;
+  --sidebar-primary-foreground: #0f172a;
+  --sidebar-accent: #1e293b;
+  --sidebar-accent-foreground: #e2e8f0;
+  --sidebar-border: rgba(0, 213, 190, 0.2);
+  --sidebar-ring: #00d5be;
 }
 
 @theme inline {
@@ -196,7 +196,7 @@ body {
 }
 
 .dark body {
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 25%, #0d9488 50%, #134e4a 75%, #0f172a 100%);
+  background: #0f1729;
   background-attachment: fixed;
 }
 
@@ -253,7 +253,7 @@ body {
 .dark .glass-card {
   background: rgba(30, 41, 59, 0.5);
   backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(0, 213, 190, 0.15);
   box-shadow: 
     0 8px 32px rgba(0, 0, 0, 0.3),
     inset 0 1px 1px rgba(255, 255, 255, 0.05);
@@ -275,8 +275,14 @@ body {
 
 .dark .glass-card-hover:hover {
   background: rgba(30, 41, 59, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(0, 213, 190, 0.3);
   box-shadow: 
     0 12px 40px rgba(0, 0, 0, 0.4),
     inset 0 1px 2px rgba(255, 255, 255, 0.1);
+}
+
+/* Touch optimization */
+.touch-manipulation {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }

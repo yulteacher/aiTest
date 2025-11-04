@@ -88,7 +88,7 @@ export default function PollsPage({ onPollClick }) {
   const handleVote = (pollId, optionId) => {
     const poll = polls.find(p => p.id === pollId);
     const isRevote = poll.userVoted !== null;
-    
+
     const updatedPolls = polls.map((poll) => {
       if (poll.id === pollId) {
         const newOptions = poll.options.map((option) => {
@@ -112,7 +112,7 @@ export default function PollsPage({ onPollClick }) {
     });
     setPolls(updatedPolls);
     localStorage.setItem('polls', JSON.stringify(updatedPolls));
-    
+
     if (isRevote) {
       toast.success('투표가 변경되었습니다!');
     } else {
@@ -273,9 +273,9 @@ function PollCard({ poll, index, onVote, onDelete, isSelected, onPollClick }) {
   const isMyPoll = poll.author === '나';
 
   const getWinningOption = () => {
-    return poll.options.reduce((max, option) => 
+    return poll.options.reduce((max, option) =>
       option.votes > max.votes ? option : max
-    , poll.options[0]);
+      , poll.options[0]);
   };
 
   const winningOption = getWinningOption();
@@ -302,12 +302,12 @@ function PollCard({ poll, index, onVote, onDelete, isSelected, onPollClick }) {
     <motion.div
       ref={cardRef}
       initial={{ opacity: 0, y: 50 }}
-      animate={{ 
-        opacity: 1, 
+      animate={{
+        opacity: 1,
         y: 0,
         scale: isSelected ? 1.02 : 1
       }}
-      transition={{ 
+      transition={{
         delay: index * 0.1,
         scale: { duration: 0.3 }
       }}
@@ -343,87 +343,93 @@ function PollCard({ poll, index, onVote, onDelete, isSelected, onPollClick }) {
             <div className="text-gray-900 dark:text-gray-100">{poll.author}</div>
             <p className="text-gray-500 dark:text-gray-400 text-xs">{poll.timestamp}</p>
           </div>
-        {poll.totalVotes > 50 && (
-          <motion.div
-            initial={{ scale: 0, rotate: -180 }}
-            animate={{ scale: 1, rotate: 0 }}
-            transition={{ type: 'spring', delay: 0.5 }}
-            className="ml-auto"
-          >
-            <Award className="w-6 h-6 text-yellow-500" />
-          </motion.div>
+          {poll.totalVotes > 50 && (
+            <motion.div
+              initial={{ scale: 0, rotate: -180 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{ type: 'spring', delay: 0.5 }}
+              className="ml-auto"
+            >
+              <Award className="w-6 h-6 text-yellow-500" />
+            </motion.div>
+          )}
+        </div>
+        {/* 🏟️ 팀 로고 & 이름 (TeamLogo 사용) */}
+        {poll.team && (
+          <div className="flex items-center gap-3 mb-4">
+            <TeamLogo team={poll.team} size="md" />
+            <span className="text-gray-800 dark:text-gray-100 font-semibold">
+              {poll.team.name}
+            </span>
+          </div>
         )}
-      </div>
+        {/* 질문 */}
+        <h3 className="text-gray-900 dark:text-gray-100 mb-4">{poll.question}</h3>
 
-      {/* 질문 */}
-      <h3 className="text-gray-900 dark:text-gray-100 mb-4">{poll.question}</h3>
+        {/* 옵션 */}
+        <div className="space-y-2 mb-4">
+          {poll.options.map((option, idx) => {
+            const percentage = poll.totalVotes > 0
+              ? Math.round((option.votes / poll.totalVotes) * 100)
+              : 0;
+            const isSelected = poll.userVoted === option.id;
+            const isWinning = option.id === winningOption.id && poll.totalVotes > 0;
 
-      {/* 옵션 */}
-      <div className="space-y-2 mb-4">
-        {poll.options.map((option, idx) => {
-          const percentage = poll.totalVotes > 0
-            ? Math.round((option.votes / poll.totalVotes) * 100)
-            : 0;
-          const isSelected = poll.userVoted === option.id;
-          const isWinning = option.id === winningOption.id && poll.totalVotes > 0;
-
-          return (
-            <motion.button
-              key={option.id}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: idx * 0.05 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => onVote(poll.id, option.id)}
-              className={`w-full text-left p-3 rounded-xl border-2 transition-all relative overflow-hidden ${
-                isSelected
+            return (
+              <motion.button
+                key={option.id}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: idx * 0.05 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => onVote(poll.id, option.id)}
+                className={`w-full text-left p-3 rounded-xl border-2 transition-all relative overflow-hidden ${isSelected
                   ? 'border-teal-600 dark:border-teal-400 shadow-lg'
                   : 'border-gray-200 dark:border-gray-700'
-              }`}
-            >
-              <motion.div
-                initial={{ width: 0 }}
-                animate={{ width: `${percentage}%` }}
-                transition={{ 
-                  duration: 1,
-                  delay: 0.5,
-                  ease: [0.4, 0, 0.2, 1]
-                }}
-                className={`absolute inset-0 ${
-                  isWinning
+                  }`}
+              >
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${percentage}%` }}
+                  transition={{
+                    duration: 1,
+                    delay: 0.5,
+                    ease: [0.4, 0, 0.2, 1]
+                  }}
+                  className={`absolute inset-0 ${isWinning
                     ? 'bg-gradient-to-r from-teal-200 to-cyan-200 dark:from-teal-900/50 dark:to-cyan-900/50'
                     : 'bg-teal-100 dark:bg-teal-900/30'
-                }`}
-              />
-              <div className="relative flex items-center justify-between">
-                <span className="text-gray-900 dark:text-gray-100 flex items-center gap-2">
-                  {option.text}
-                  {isSelected && (
-                    <motion.div
-                      initial={{ scale: 0, rotate: -180 }}
-                      animate={{ scale: 1, rotate: 0 }}
-                      transition={{ type: 'spring' }}
-                    >
-                      <Check className="w-4 h-4 text-teal-600 dark:text-teal-400" />
-                    </motion.div>
-                  )}
-                  {isWinning && poll.totalVotes > 0 && (
-                    <Zap className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-                  )}
-                </span>
-                <motion.span
-                  className="text-gray-600 dark:text-gray-400"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 1 }}
-                >
-                  {percentage}%
-                </motion.span>
-              </div>
-            </motion.button>
-          );
-        })}
-      </div>
+                    }`}
+                />
+                <div className="relative flex items-center justify-between">
+                  <span className="text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                    {option.text}
+                    {isSelected && (
+                      <motion.div
+                        initial={{ scale: 0, rotate: -180 }}
+                        animate={{ scale: 1, rotate: 0 }}
+                        transition={{ type: 'spring' }}
+                      >
+                        <Check className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+                      </motion.div>
+                    )}
+                    {isWinning && poll.totalVotes > 0 && (
+                      <Zap className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+                    )}
+                  </span>
+                  <motion.span
+                    className="text-gray-600 dark:text-gray-400"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 1 }}
+                  >
+                    {percentage}%
+                  </motion.span>
+                </div>
+              </motion.button>
+            );
+          })}
+        </div>
 
         <motion.p
           initial={{ opacity: 0 }}
