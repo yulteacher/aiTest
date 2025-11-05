@@ -1,3 +1,5 @@
+import { KBO_TEAMS } from '../constants/teams';
+
 export const dummyPollsData = [
   {
     id: '1',
@@ -8,11 +10,12 @@ export const dummyPollsData = [
       { id: '1', text: 'SSG 랜더스', votes: 145 },
       { id: '2', text: 'LG 트윈스', votes: 123 },
       { id: '3', text: 'KIA 타이거즈', votes: 98 },
-      { id: '4', text: '삼성 라이온즈', votes: 87 }
+      { id: '4', text: '삼성 라이온즈', votes: 87 },
     ],
     totalVotes: 453,
     timestamp: '1일 전',
-    userVoted: null
+    userVotes: {},
+    team: KBO_TEAMS.find(t => t.id === 'ssg'), // ✅ 예: SSG 구단
   },
   {
     id: '2',
@@ -23,11 +26,12 @@ export const dummyPollsData = [
       { id: '1', text: '투수', votes: 167 },
       { id: '2', text: '타자', votes: 234 },
       { id: '3', text: '내야수', votes: 89 },
-      { id: '4', text: '외야수', votes: 76 }
+      { id: '4', text: '외야수', votes: 76 },
     ],
     totalVotes: 566,
     timestamp: '2일 전',
-    userVoted: '2'
+    userVotes: {},
+    team: KBO_TEAMS.find(t => t.id === 'lg'), // ✅ LG 구단
   },
   {
     id: '3',
@@ -37,10 +41,11 @@ export const dummyPollsData = [
     options: [
       { id: '1', text: '토요일', votes: 256 },
       { id: '2', text: '일요일', votes: 198 },
-      { id: '3', text: '둘 다!', votes: 145 }
+      { id: '3', text: '둘 다!', votes: 145 },
     ],
     totalVotes: 599,
     timestamp: '3일 전',
-    userVoted: null
-  }
+    userVotes: {},
+    team: KBO_TEAMS.find(t => t.id === 'kia'), // ✅ KIA 구단
+  },
 ];

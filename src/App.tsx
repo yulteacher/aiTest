@@ -10,11 +10,11 @@ import ChatPage from './components/ChatPage';
 import MyPage from './components/MyPage';
 import PostDetailPage from './components/PostDetailPage';
 import PollDetailPage from './components/PollDetailPage';
-import { Toaster } from './components/ui/sonner';
 import { dummyPostsData } from './data/dummyPosts.js';
 import { dummyPollsData } from './data/dummyPolls.js';
 import LiquidEther from "./components/reactbits/LiquidEther";
-
+import SignUpPage from './components/SignUpPage';
+import { Toaster, toast } from 'react-hot-toast';
 export interface Post {
   id: string;
   author: string;
@@ -41,8 +41,9 @@ export interface Poll {
   timestamp: string;
   team?: string;
   totalVotes: number;
-  userVoted?: string;
+  userVotes?: Record<string, string>; // 수정: 복수형 + 객체 구조
 }
+
 
 export default function App() {
   const [showIntro, setShowIntro] = useState(true);
@@ -52,7 +53,24 @@ export default function App() {
   const [showChat, setShowChat] = useState(false);
   const [selectedPostId, setSelectedPostId] = useState(null);
   const [selectedPollId, setSelectedPollId] = useState(null);
-
+  const [activePage, setActivePage] = useState('home');
+  const navigateTo = (path: string) => {
+    if (path.startsWith('post-')) {
+      const id = path.split('-')[1];
+      setSelectedPostId(id);
+      setSelectedPollId(null);
+    } else if (path.startsWith('poll-')) {
+      const id = path.split('-')[1];
+      setSelectedPollId(id);
+      setSelectedPostId(null);
+    } else {
+      setSelectedPostId(null);
+      setSelectedPollId(null);
+      setActiveTab(path);
+    }
+    // 브라우저 히스토리에 경로 저장
+    window.history.pushState({ path }, '', `#${path}`);
+  };
   // 🧭 페이지 제목 자동 변경
   useEffect(() => {
     let title = 'KBO 팬덤 커뮤니티';
@@ -63,6 +81,65 @@ export default function App() {
     else if (activeTab === 'mypage') title = '마이페이지 - KBO 팬덤 커뮤니티';
     document.title = title;
   }, [activeTab, selectedPostId, selectedPollId]);
+
+  // ✅ 브라우저 뒤로가기(popstate) 대응 (확장버전)
+  useEffect(() => {
+    const handlePopState = (event: PopStateEvent) => {
+      const state = event.state;
+      const hash = window.location.hash.replace('#', '');
+      const path = state?.path || hash;
+
+      // 🚀 경로가 없으면 홈으로
+      if (!path) {
+        setShowIntro(false);
+        setUser(null);
+        setActiveTab('home');
+        setSelectedPostId(null);
+        setSelectedPollId(null);
+        return;
+      }
+
+      // ✅ 인트로 / 로그인 / 회원가입 구분
+      if (path === 'intro') {
+        setShowIntro(true);
+        setUser(null);
+        return;
+      }
+      if (path === 'login') {
+        setShowIntro(false);
+        setUser(null);
+        return;
+      }
+      if (path === 'signup') {
+        setShowIntro(false);
+        setUser(null);
+        setActivePage('signup');
+        return;
+      }
+
+      // ✅ 게시글/투표 상세 보기
+      if (path.startsWith('post-')) {
+        setSelectedPostId(path.split('-')[1]);
+        setSelectedPollId(null);
+        return;
+      }
+      if (path.startsWith('poll-')) {
+        setSelectedPollId(path.split('-')[1]);
+        setSelectedPostId(null);
+        return;
+      }
+
+      // ✅ 일반 탭 (홈/피드/투표/마이페이지)
+      setSelectedPostId(null);
+      setSelectedPollId(null);
+      setShowIntro(false);
+      setActiveTab(path);
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
 
   // 🌟 인트로 및 초기 더미 데이터 로직
   useEffect(() => {
@@ -79,8 +156,10 @@ export default function App() {
       console.log('✅ KBO 콘텐츠로 업데이트되었습니다!');
     }
 
-    // 앱 최초 실행 시 더미 데이터 생성
-    if (hasVisited) initializeDummyData();
+    if (!hasVisited) {
+      initializeDummyData(); // 최초 실행 한 번만 더미데이터 생성
+      localStorage.setItem('hasVisited', 'true');
+    }
   }, []);
 
 
@@ -177,6 +256,19 @@ export default function App() {
     localStorage.setItem('currentUser', JSON.stringify(userData));
   };
 
+  // ✅ 회원가입 완료 후 자동 로그인
+  const handleSignupSuccess = (newUser) => {
+    toast.success(`${newUser.username}님, 회원가입이 완료되었습니다! 🎉`);
+    setUser(newUser);
+    localStorage.setItem('currentUser', JSON.stringify(newUser));
+    localStorage.setItem('users', JSON.stringify([
+      ...(JSON.parse(localStorage.getItem('users') || '[]')),
+      newUser
+    ]));
+    navigateTo('home');
+  };
+
+
   const handleLogout = () => {
     setUser(null);
     localStorage.removeItem('currentUser');
@@ -202,7 +294,7 @@ export default function App() {
       return (
         <PostDetailPage
           postId={selectedPostId}
-          onBack={() => setSelectedPostId(null)}
+          onBack={() => window.history.back()}
           isDarkMode={darkMode}
           onToggleDarkMode={toggleDarkMode}
         />
@@ -233,7 +325,7 @@ export default function App() {
       case 'polls':
         return <PollsPage onPollClick={setSelectedPollId} />;
       case 'mypage':
-        return <MyPage user={user} onLogout={handleLogout} onUpdateUser={handleUpdateUser} />;
+        return <MyPage user={user} onLogout={handleLogout} onUpdateUser={handleUpdateUser} onNavigate={setActiveTab} />;
       default:
         return null;
     }
@@ -248,7 +340,14 @@ export default function App() {
   //  인트로
   if (showIntro) return <IntroPage onEnter={handleEnterApp} />;
   //  로그인
-  if (!user) return <LoginPage onLogin={handleLogin} />;
+  if (!user) {
+    const hash = window.location.hash.replace('#', '');
+    if (hash === 'signup') {
+      return <SignUpPage onSignup={handleSignupSuccess} navigateTo={navigateTo} />;
+    } else {
+      return <LoginPage onLogin={handleLogin} navigateTo={navigateTo} />;
+    }
+  }
 
   return (
     <div className="min-h-screen transition-colors relative">
@@ -429,11 +528,19 @@ export default function App() {
             {tabs.map((tab, index) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
+
+              const handleTabClick = () => {
+                if (selectedPostId) setSelectedPostId(null);
+                if (selectedPollId) setSelectedPollId(null);
+                navigateTo(tab.id); // ✅ 이렇게 변경
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              };
+
               return (
                 <motion.button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className="flex flex-col items-center gap-1 px-4 py-2 rounded-2xl transition-colors relative"
+                  onClick={handleTabClick}
+                  className="flex flex-col items-center gap-1 px-5 py-2 rounded-2xl transition-colors relative cursor-pointer"
                   whileTap={{ scale: 0.95 }}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -453,6 +560,8 @@ export default function App() {
                   >
                     {tab.label}
                   </span>
+
+                  {/* 활성 탭 배경 */}
                   {isActive && (
                     <motion.div
                       layoutId="activeTab"
@@ -466,6 +575,7 @@ export default function App() {
           </div>
         </div>
       </motion.nav>
+      <Toaster position="top-center" />
     </div>
   );
 }

@@ -1,31 +1,41 @@
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { useState, useEffect, useMemo } from 'react';
+import { motion, useMotionValue, useTransform, animate } from "framer-motion";
 import { Heart, TrendingUp, MessageCircle, Users, Award, ChevronRight, Flame } from 'lucide-react';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import TeamLogo from './TeamLogo';
 import LightRays from "./reactbits/LightRays";
-
+import { dummyPollsData } from "../data/dummyPolls";
 export default function HomePage({ user, onNavigate, onPostClick, onPollClick, onChatOpen }) {
   const [posts, setPosts] = useState([]);
   const [polls, setPolls] = useState([]);
 
   useEffect(() => {
-    const savedPosts = localStorage.getItem('posts');
     const savedPolls = localStorage.getItem('polls');
 
-    if (savedPosts) {
-      setPosts(JSON.parse(savedPosts));
+    // ✅ polls가 없을 때만 더미데이터 세팅
+    if (!savedPolls) {
+      localStorage.setItem('polls', JSON.stringify(dummyPollsData));
     }
-    if (savedPolls) {
-      setPolls(JSON.parse(savedPolls));
-    }
+
+    const savedPosts = localStorage.getItem('posts');
+    const pollsData = JSON.parse(localStorage.getItem('polls') || "[]");
+
+    if (savedPosts) setPosts(JSON.parse(savedPosts));
+    if (pollsData) setPolls(pollsData);
   }, []);
 
-  const stats = [
+
+  const stats = useMemo(() => [
     { icon: Users, label: '총 회원', value: '1,234', color: 'from-teal-500 to-cyan-600' },
     { icon: Heart, label: '좋아요', value: '5,678', color: 'from-cyan-400 to-sky-600' },
-    { icon: TrendingUp, label: '진행중 투표', value: '12', color: 'from-teal-400 to-cyan-600' },
-  ];
+    {
+      icon: TrendingUp,
+      label: '진행중 투표',
+      value: polls.length.toString(),
+      color: 'from-teal-400 to-cyan-600'
+    },
+  ], [polls]);
+
 
   const recentPosts = posts.slice(0, 3);
   const trendingPolls = polls.slice(0, 2);
@@ -76,18 +86,50 @@ export default function HomePage({ user, onNavigate, onPostClick, onPollClick, o
         <div className="grid grid-cols-3 gap-3">
           {stats.map((stat, index) => {
             const Icon = stat.icon;
+            const motionValue = useMotionValue(0);
+            const rounded = useTransform(motionValue, (latest) =>
+              Math.floor(latest).toLocaleString()
+            );
+
+            useEffect(() => {
+              const end = parseInt(stat.value.replace(/,/g, ""), 10) || 0;
+              const controls = animate(motionValue, end, {
+                duration: 1.2,
+                ease: "easeOut",
+              });
+              return () => controls.stop();
+            }, [stat.value]);
+
+            const handleClick = () => {
+              if (stat.label === '진행중 투표' && onNavigate) {
+                onNavigate('polls');
+              }
+            };
+
             return (
               <motion.div
                 key={stat.label}
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: index * 0.1 }}
-                className="glass-card glass-card-hover rounded-2xl p-4 text-center"
+                onClick={handleClick}
+                className={`glass-card glass-card-hover rounded-2xl p-4 text-center ${stat.label === '진행중 투표' ? 'cursor-pointer hover:scale-[1.03]' : ''
+                  }`}
               >
-                <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${stat.color} flex items-center justify-center mx-auto mb-2 shadow-sm`}>
+                <div
+                  className={`w-10 h-10 rounded-full bg-gradient-to-br ${stat.color} flex items-center justify-center mx-auto mb-2 shadow-sm`}
+                >
                   <Icon className="w-5 h-5 text-white" />
                 </div>
-                <div className="text-gray-900 dark:text-gray-100">{stat.value}</div>
+
+                {/* ✨ 부드러운 숫자 애니메이션 */}
+                <motion.span
+                  className="text-gray-900 dark:text-gray-100 font-semibold"
+                  key={stat.label}
+                >
+                  {rounded}
+                </motion.span>
+
                 <p className="text-gray-500 dark:text-gray-400 text-xs">{stat.label}</p>
               </motion.div>
             );

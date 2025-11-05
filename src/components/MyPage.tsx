@@ -4,8 +4,9 @@ import { Edit2, Settings, LogOut, Award, Zap, Heart, Bell, MessageCircle, Trendi
 import TeamAvatar from './TeamAvatar';
 import { KBO_TEAMS } from '../constants/teams';
 import { toast } from 'sonner';
+import TeamLogo from './TeamLogo';
 
-export default function MyPage({ user, onLogout, onUpdateUser }) {
+export default function MyPage({ user, onLogout, onUpdateUser, onNavigate }) {
   const [notifications, setNotifications] = useState([]);
   const [activeSection, setActiveSection] = useState('profile');
   const [isEditingProfile, setIsEditingProfile] = useState(false);
@@ -111,8 +112,8 @@ export default function MyPage({ user, onLogout, onUpdateUser }) {
   const handleSaveProfile = () => {
     // 로컬스토리지의 사용자 정보 업데이트
     const users = JSON.parse(localStorage.getItem('users') || '[]');
-    const updatedUsers = users.map(u => 
-      u.username === user.username 
+    const updatedUsers = users.map(u =>
+      u.username === user.username
         ? { ...u, avatar: editedUser.avatar, team: editedUser.team, bio: editedUser.bio }
         : u
     );
@@ -131,27 +132,30 @@ export default function MyPage({ user, onLogout, onUpdateUser }) {
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
+  useEffect(() => {
+    // ✅ 팀 변경 시 TeamAvatar 즉시 새로고침
+    setEditedUser(prev => ({ ...prev }));
+  }, [editedUser.team]);
+
   return (
     <div className="p-4 space-y-4">
       {/* 탭 전환 */}
       <div className="flex gap-2 glass-card rounded-2xl p-2">
         <button
           onClick={() => setActiveSection('profile')}
-          className={`flex-1 py-3 rounded-xl transition-all text-center ${
-            activeSection === 'profile'
-              ? 'bg-gradient-to-r from-teal-500 to-cyan-500 dark:from-[#00d5be] dark:to-[#00b8db] text-white'
-              : 'text-gray-600 dark:text-gray-400'
-          }`}
+          className={`flex-1 py-3 rounded-xl transition-all text-center ${activeSection === 'profile'
+            ? 'bg-gradient-to-r from-teal-500 to-cyan-500 dark:from-[#00d5be] dark:to-[#00b8db] text-white'
+            : 'text-gray-600 dark:text-gray-400'
+            }`}
         >
           프로필
         </button>
         <button
           onClick={() => setActiveSection('notifications')}
-          className={`flex-1 py-3 rounded-xl transition-all relative text-center ${
-            activeSection === 'notifications'
-              ? 'bg-gradient-to-r from-teal-500 to-cyan-500 dark:from-[#00d5be] dark:to-[#00b8db] text-white'
-              : 'text-gray-600 dark:text-gray-400'
-          }`}
+          className={`flex-1 py-3 rounded-xl transition-all relative text-center ${activeSection === 'notifications'
+            ? 'bg-gradient-to-r from-teal-500 to-cyan-500 dark:from-[#00d5be] dark:to-[#00b8db] text-white'
+            : 'text-gray-600 dark:text-gray-400'
+            }`}
         >
           <span className="inline-block">알림</span>
           {unreadCount > 0 && (
@@ -172,7 +176,7 @@ export default function MyPage({ user, onLogout, onUpdateUser }) {
             className="space-y-4"
           >
             {/* 프로필 카드 */}
-            <div 
+            <div
               className="bg-gradient-to-br from-teal-500 via-cyan-500 to-sky-600 rounded-2xl p-6 text-white shadow-2xl"
               style={{
                 background: typeof window !== 'undefined' && document.documentElement.classList.contains('dark')
@@ -180,10 +184,17 @@ export default function MyPage({ user, onLogout, onUpdateUser }) {
                   : undefined
               }}
             >
-              <div className="flex flex-col items-center">
+              <div className="flex flex-col items-center ">
                 {isEditingProfile ? (
-                  <div className="relative">
+                  <motion.div
+                    key={editedUser?.team?.id}
+                    initial={{ scale: 0.9, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ duration: 0.3 }}
+                    className="relative"
+                  >
                     <TeamAvatar
+                      key={`${editedUser?.team?.id}-${editedUser?.avatar || ''}`} // ✅ team+avatar 조합으로 완전한 고유값
                       team={editedUser?.team?.name}
                       src={editedUser?.avatar}
                       size="xl"
@@ -198,21 +209,27 @@ export default function MyPage({ user, onLogout, onUpdateUser }) {
                         className="hidden"
                       />
                     </label>
-                  </div>
+                  </motion.div>
                 ) : (
                   <TeamAvatar
                     team={user?.team?.name}
                     src={user?.avatar}
                     size="xl"
-                    className="border-4 border-white mb-4"
+                    className="border-4 border-white mb-4 "
                   />
                 )}
-                
+
                 <h2 className="text-white mb-1 mt-4">{user?.username || '사용자'}</h2>
                 <p className="text-white/80">@{user?.username || 'username'}</p>
-                
+
                 {isEditingProfile ? (
-                  <div className="mt-3 w-full max-w-xs">
+                  <div className="mt-3 w-full max-w-xs border-t border-white/20 py-3">
+                    {/* ✅ 선택된 팀 미리보기 (Poll UI 스타일 그대로) */}
+                    {editedUser?.team && (
+                      <div className="flex items-center justify-center gap-3 mt-4 mb-10">
+                        <TeamLogo team={editedUser.team} size="xl" />
+                      </div>
+                    )}
                     <label className="block text-white/80 text-sm mb-2">응원 구단</label>
                     <div className="relative">
                       <select
@@ -225,7 +242,7 @@ export default function MyPage({ user, onLogout, onUpdateUser }) {
                       >
                         {KBO_TEAMS.map(team => (
                           <option key={team.id} value={team.id} className="text-gray-900">
-                            {team.emoji} {team.name}
+                            {team.name}
                           </option>
                         ))}
                       </select>
@@ -234,13 +251,14 @@ export default function MyPage({ user, onLogout, onUpdateUser }) {
                   </div>
                 ) : user?.team && (
                   <div className="mt-3 bg-white/20 backdrop-blur-sm rounded-full px-4 py-2 flex items-center gap-2">
-                    <span className="text-2xl">{user.team.emoji}</span>
+                    <TeamLogo team={user.team} size="md" />
                     <span className="text-white">{user.team.name}</span>
                   </div>
+
                 )}
-                
+
                 {isEditingProfile ? (
-                  <div className="mt-3 w-full max-w-xs">
+                  <div className="mt-3 w-full max-w-xs border-t border-white/20 pt-3 py-3">
                     <label className="block text-white/80 text-sm mb-2">소개</label>
                     <textarea
                       value={editedUser?.bio || ''}
@@ -319,12 +337,22 @@ export default function MyPage({ user, onLogout, onUpdateUser }) {
 
             {/* 메뉴 */}
             <div className="glass-card rounded-2xl overflow-hidden border border-teal-100/50 dark:border-[#00d5be]/20">
-              <button className="w-full flex items-center gap-3 px-4 py-3 hover:bg-teal-50 dark:hover:bg-[#00d5be]/10 transition-all border-b border-gray-100 dark:border-gray-700/50">
+              {/* ✅ 내 구단 투표 보기 */}
+              <button
+                onClick={() => {
+                  // ✅ 구단 정보 localStorage에 임시 저장
+                  localStorage.setItem("selectedTeamForPolls", JSON.stringify(user.team));
+                  onNavigate("polls");
+                }}
+                className="w-full flex items-center gap-3 px-4 py-3 hover:bg-teal-50 dark:hover:bg-[#00d5be]/10 transition-all border-b border-gray-100 dark:border-gray-700/50"
+              >
                 <div className="w-10 h-10 rounded-full bg-teal-100 dark:bg-[#00d5be]/20 flex items-center justify-center">
-                  <Settings className="w-5 h-5 text-teal-600 dark:text-[#00d5be]" />
+                  <TrendingUp className="w-5 h-5 text-teal-600 dark:text-[#00d5be]" />
                 </div>
-                <span className="text-gray-900 dark:text-gray-100">설정</span>
+                <span className="text-gray-900 dark:text-gray-100">내 구단 투표 보기</span>
               </button>
+
+              {/* 로그아웃 */}
               <button
                 onClick={onLogout}
                 className="w-full flex items-center gap-3 px-4 py-3 hover:bg-teal-50 dark:hover:bg-[#00d5be]/10 transition-all"
@@ -335,6 +363,7 @@ export default function MyPage({ user, onLogout, onUpdateUser }) {
                 <span className="text-gray-900 dark:text-gray-100">로그아웃</span>
               </button>
             </div>
+
 
             {/* 배지 */}
             <div className="glass-card rounded-2xl p-5 border border-teal-100/50 dark:border-[#00d5be]/20">
@@ -407,11 +436,10 @@ export default function MyPage({ user, onLogout, onUpdateUser }) {
                     exit={{ opacity: 0, x: 100, height: 0, marginBottom: 0 }}
                     transition={{ delay: index * 0.05 }}
                     onClick={() => markAsRead(notif.id)}
-                    className={`flex items-start gap-3 p-4 rounded-xl cursor-pointer transition-all relative overflow-hidden border touch-manipulation ${
-                      notif.read
-                        ? 'glass-card border-gray-200/50 dark:border-gray-700/30'
-                        : 'glass-card border-teal-200/70 dark:border-[#00d5be]/30 bg-gradient-to-r from-teal-50/30 to-cyan-50/30 dark:from-[#00d5be]/5 dark:to-[#00b8db]/5'
-                    }`}
+                    className={`flex items-start gap-3 p-4 rounded-xl cursor-pointer transition-all relative overflow-hidden border touch-manipulation ${notif.read
+                      ? 'glass-card border-gray-200/50 dark:border-gray-700/30'
+                      : 'glass-card border-teal-200/70 dark:border-[#00d5be]/30 bg-gradient-to-r from-teal-50/30 to-cyan-50/30 dark:from-[#00d5be]/5 dark:to-[#00b8db]/5'
+                      }`}
                     style={{ WebkitTapHighlightColor: 'transparent' }}
                   >
                     <img
@@ -419,7 +447,7 @@ export default function MyPage({ user, onLogout, onUpdateUser }) {
                       alt={notif.user}
                       className="w-11 h-11 rounded-full flex-shrink-0 ring-2 ring-teal-200 dark:ring-[#00d5be]/30"
                     />
-                    
+
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start gap-2 mb-1">
                         <p className="text-sm text-gray-900 dark:text-gray-100 flex-1">
