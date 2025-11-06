@@ -1,22 +1,51 @@
-import { useState } from 'react';
-import { Image, Send } from 'lucide-react';
-import { Button } from './ui/button';
-import { Textarea } from './ui/textarea';
+import { useState } from "react";
+import { Image, Send } from "lucide-react";
+import { Button } from "./ui/button";
+import { Textarea } from "./ui/textarea";
+import { useXPSystem } from "../hooks/useXPSystem";
+import { useLocalData } from "../hooks/useLocalData";
 
 interface CreatePostProps {
-  onCreatePost: (content: string, image?: string) => void;
+  onCreatePost?: (content: string, image?: string) => void;
 }
 
-export function CreatePost({ onCreatePost }: CreatePostProps) {
-  const [content, setContent] = useState('');
-  const [imageUrl, setImageUrl] = useState('');
+export default function CreatePost({ onCreatePost }: CreatePostProps) {
+  const [content, setContent] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
   const [showImageInput, setShowImageInput] = useState(false);
 
+  const { currentUser, setCurrentUser, users, setUsers, posts, setPosts } = useLocalData();
+  const { addXP } = useXPSystem(currentUser, setCurrentUser, users, setUsers);
+
   const handleSubmit = () => {
-    if (!content.trim()) return;
-    onCreatePost(content, imageUrl || undefined);
-    setContent('');
-    setImageUrl('');
+    if (!content.trim() || !currentUser) return;
+
+    // ✅ 새 게시글 객체 생성
+    const newPost = {
+      id: Date.now(),
+      author: currentUser.username,
+      avatar: currentUser.avatar,
+      team: currentUser.team,
+      content: content.trim(),
+      image: imageUrl || "",
+      likes: [],
+      commentsList: [],
+      timestamp: new Date().toISOString(),
+    };
+
+    // ✅ 로컬 업데이트
+    setPosts([newPost, ...posts]);
+    localStorage.setItem("posts", JSON.stringify([newPost, ...posts]));
+
+    // ✅ XP 추가
+    addXP("postCreate");
+
+    // ✅ 외부 콜백 호출 (필요시)
+    if (onCreatePost) onCreatePost(content, imageUrl || undefined);
+
+    // ✅ 초기화
+    setContent("");
+    setImageUrl("");
     setShowImageInput(false);
   };
 

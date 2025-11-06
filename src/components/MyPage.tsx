@@ -5,6 +5,8 @@ import TeamAvatar from './TeamAvatar';
 import { KBO_TEAMS } from '../constants/teams';
 import { toast } from 'sonner';
 import TeamLogo from './TeamLogo';
+import { useXPSystem } from "../hooks/useXPSystem";
+import { useLocalData } from "../hooks/useLocalData";
 
 export default function MyPage({ user, onLogout, onUpdateUser, onNavigate }) {
   const [notifications, setNotifications] = useState([]);
@@ -12,6 +14,10 @@ export default function MyPage({ user, onLogout, onUpdateUser, onNavigate }) {
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [editedUser, setEditedUser] = useState({ ...user });
   const [newProfileImage, setNewProfileImage] = useState(null);
+  const { currentUser, setCurrentUser, userData, setUserData } = useLocalData();
+  const { getLevelInfo } = useXPSystem(currentUser, setCurrentUser, userData, setUserData);
+
+  const { level, xp, progress, toNext } = getLevelInfo();
 
   useEffect(() => {
     const savedNotifications = localStorage.getItem('notifications');
@@ -316,22 +322,23 @@ export default function MyPage({ user, onLogout, onUpdateUser, onNavigate }) {
 
               {/* 통계 */}
               <div className="grid grid-cols-3 gap-4 mt-6 pt-6 border-t border-white/20">
-                {stats.map((stat, index) => {
-                  const Icon = stat.icon;
-                  return (
-                    <motion.div
-                      key={stat.label}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.2 + index * 0.1 }}
-                      className="text-center"
-                    >
-                      <Icon className="w-5 h-5 mx-auto mb-2 text-white" />
-                      <div className="text-xl text-white mb-1">{stat.value}</div>
-                      <p className="text-xs text-white/80">{stat.label}</p>
-                    </motion.div>
-                  );
-                })}
+                {
+                  stats.map((stat, index) => {
+                    const Icon = stat.icon;
+                    return (
+                      <motion.div
+                        key={stat.label}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2 + index * 0.1 }}
+                        className="text-center"
+                      >
+                        <Icon className="w-5 h-5 mx-auto mb-2 text-white" />
+                        <div className="text-xl text-white mb-1">{stat.value}</div>
+                        <p className="text-xs text-white/80">{stat.label}</p>
+                      </motion.div>
+                    );
+                  })}
               </div>
             </div>
 
@@ -389,20 +396,24 @@ export default function MyPage({ user, onLogout, onUpdateUser, onNavigate }) {
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-gray-900 dark:text-gray-100 flex items-center gap-2 font-medium">
                   <Zap className="w-5 h-5 text-teal-500 dark:text-[#00d5be]" />
-                  레벨 7
+                  레벨 {level}
                 </h3>
-                <span className="text-sm text-gray-600 dark:text-gray-400">75%</span>
+                <span className="text-sm text-gray-600 dark:text-gray-400">{progress}%</span>
               </div>
+
+              {/* XP 진행바 */}
               <div className="h-2.5 bg-gray-200 dark:bg-gray-700/50 rounded-full overflow-hidden">
                 <motion.div
+                  key={xp} // XP 변동 시 애니메이션 갱신
                   initial={{ width: 0 }}
-                  animate={{ width: '75%' }}
-                  transition={{ delay: 0.5, duration: 1, ease: 'easeOut' }}
+                  animate={{ width: `${progress}%` }}
+                  transition={{ delay: 0.2, duration: 0.8, ease: "easeOut" }}
                   className="h-full bg-gradient-to-r from-teal-400 to-cyan-500 dark:from-[#00d5be] dark:to-[#00b8db] rounded-full"
                 />
               </div>
+
               <p className="text-sm text-gray-600 dark:text-gray-400 mt-3">
-                다음 레벨까지 250XP 남음
+                다음 레벨까지 {toNext} XP 남음 (총 {xp} XP)
               </p>
             </div>
           </motion.div>
