@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { LogIn, Sparkles, UserPlus } from 'lucide-react';
-import { KBO_TEAMS } from '../constants/teams';
+import { KBO_TEAMS } from '../data/constants/teams';
 
 export default function LoginPage({ onLogin, navigateTo }) {
   const [username, setUsername] = useState('');
@@ -10,25 +10,14 @@ export default function LoginPage({ onLogin, navigateTo }) {
 
   const handleLogin = () => {
     setError('');
-
-    if (username === 'admin' && password === '123456') {
-      onLogin({
-        username: 'admin',
-        avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop',
-        team: KBO_TEAMS[0],
-      });
-      return;
-    }
-
-    const users = JSON.parse(localStorage.getItem('users') || '[]');
-    const user = users.find(u => u.username === username && u.password === password);
-
-    if (user) {
-      onLogin({ username: user.username, avatar: user.avatar, team: user.team });
+    const success = onLogin(username, password); // ✅ useAuth의 login 함수 호출
+    if (success) {
+      navigateTo('home'); // ✅ 성공하면 홈으로 이동
     } else {
       setError('아이디 또는 비밀번호가 올바르지 않습니다.');
     }
   };
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-teal-600 via-cyan-500 to-sky-600 flex items-center justify-center p-4">
@@ -62,7 +51,7 @@ export default function LoginPage({ onLogin, navigateTo }) {
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          onClick={handleLogin}
+          onClick={handleLogin}  // ✅ 여기가 핵심!
           className="w-full bg-white text-teal-700 py-3 rounded-xl flex items-center justify-center gap-2"
         >
           <LogIn className="w-5 h-5" />

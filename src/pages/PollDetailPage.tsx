@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { motion, useMotionValue, useTransform, animate } from 'framer-motion';
 import { ArrowLeft, Check, Award, Edit2, Trash2, Save, X } from 'lucide-react';
 import { toast } from 'sonner';
-import TeamLogo from './TeamLogo';
-import TeamAvatar from './TeamAvatar';
+import TeamLogo from '../components/yului/TeamLogo';
+import TeamAvatar from '../components/yului/TeamAvatar';
 
 /* ===============================
    🧮 AnimatedCount - 부드러운 카운트 + 색상 강조
@@ -36,8 +36,13 @@ function AnimatedCount({ value }) {
     </motion.span>
   );
 }
-
-export default function PollDetailPage({ pollId, onBack, isDarkMode, onToggleDarkMode }) {
+interface PollDetailPageProps {
+  pollId: string | null;
+  onBack: () => void;
+  isDarkMode?: boolean;
+  onToggleDarkMode?: () => void;
+}
+export default function PollDetailPage({ pollId, onBack, isDarkMode, onToggleDarkMode }: PollDetailPageProps) {
   const [poll, setPoll] = useState(null);
   const [polls, setPolls] = useState([]);
   const [isEditing, setIsEditing] = useState(false);
@@ -205,8 +210,8 @@ export default function PollDetailPage({ pollId, onBack, isDarkMode, onToggleDar
                   whileTap={{ scale: 0.98 }}
                   onClick={() => handleVote(option.id)}
                   className={`w-full relative overflow-hidden rounded-xl p-4 transition-all ${isVoted
-                      ? "ring-2 ring-slate-500 bg-slate-50 dark:bg-slate-900/50"
-                      : "bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600"
+                    ? "ring-2 ring-slate-500 bg-slate-50 dark:bg-slate-900/50"
+                    : "bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600"
                     }`}
                 >
                   <motion.div
@@ -220,8 +225,8 @@ export default function PollDetailPage({ pollId, onBack, isDarkMode, onToggleDar
                     <div className="flex items-center gap-3">
                       <div
                         className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${isVoted
-                            ? "border-slate-500 bg-slate-500"
-                            : "border-gray-300 dark:border-gray-500"
+                          ? "border-slate-500 bg-slate-500"
+                          : "border-gray-300 dark:border-gray-500"
                           }`}
                       >
                         {isVoted && <Check className="w-4 h-4 text-white" />}

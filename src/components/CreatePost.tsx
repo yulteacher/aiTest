@@ -14,13 +14,13 @@ export default function CreatePost({ onCreatePost }: CreatePostProps) {
   const [imageUrl, setImageUrl] = useState("");
   const [showImageInput, setShowImageInput] = useState(false);
 
+  // ✅ v4 구조에 맞게 수정
   const { currentUser, setCurrentUser, users, setUsers, posts, setPosts } = useLocalData();
   const { addXP } = useXPSystem(currentUser, setCurrentUser, users, setUsers);
 
   const handleSubmit = () => {
     if (!content.trim() || !currentUser) return;
 
-    // ✅ 새 게시글 객체 생성
     const newPost = {
       id: Date.now(),
       author: currentUser.username,
@@ -33,17 +33,15 @@ export default function CreatePost({ onCreatePost }: CreatePostProps) {
       timestamp: new Date().toISOString(),
     };
 
-    // ✅ 로컬 업데이트
-    setPosts([newPost, ...posts]);
-    localStorage.setItem("posts", JSON.stringify([newPost, ...posts]));
+    const updatedPosts = [newPost, ...posts];
+    setPosts(updatedPosts); // ✅ 상태 업데이트
+    localStorage.setItem("posts", JSON.stringify(updatedPosts));
 
-    // ✅ XP 추가
     addXP("postCreate");
 
-    // ✅ 외부 콜백 호출 (필요시)
     if (onCreatePost) onCreatePost(content, imageUrl || undefined);
 
-    // ✅ 초기화
+    // 초기화
     setContent("");
     setImageUrl("");
     setShowImageInput(false);

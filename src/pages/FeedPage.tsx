@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Heart, MessageCircle, Share2, Image as ImageIcon, Trash2, Edit2 } from "lucide-react";
-import { ImageWithFallback } from "./figma/ImageWithFallback";
-import Confetti from "./Confetti";
-import TeamSelector from "./TeamSelector";
-import TeamAvatar from "./TeamAvatar";
+import { ImageWithFallback } from "../components/figma/ImageWithFallback.js";
+import Confetti from "../components/Confetti.js";
+import TeamSelector from "../components/TeamSelector.js";
+import TeamAvatar from "../components/yului/TeamAvatar.js";
 import { toast } from "sonner";
 import { dummyPostsData } from "../data/dummyPosts.js"; // ✅ 더미 데이터 import
 

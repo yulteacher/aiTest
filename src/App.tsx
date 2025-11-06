@@ -1,228 +1,62 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Home, TrendingUp, Moon, Sun, Rss, User, MessageCircle, X, ArrowLeft } from 'lucide-react';
-import IntroPage from './components/IntroPage';
-import LoginPage from './components/LoginPage';
-import HomePage from './components/HomePage';
-import FeedPage from './components/FeedPage';
-import PollsPage from './components/PollsPage';
-import ChatPage from './components/ChatPage';
-import MyPage from './components/MyPage';
-import PostDetailPage from './components/PostDetailPage';
-import PollDetailPage from './components/PollDetailPage';
-import { dummyPostsData } from './data/dummyPosts.js';
-import { dummyPollsData } from './data/dummyPolls.js';
+import { useAuth } from "./hooks/useAuth";
+import { useLocalData } from './hooks/useLocalData';
 import LiquidEther from "./components/reactbits/LiquidEther";
-import SignUpPage from './components/SignUpPage';
-import { Toaster, toast } from 'react-hot-toast';
-export interface Post {
-  id: string;
-  author: string;
-  avatar: string;
-  timestamp: string;
-  content: string;
-  image?: string;
-  likes: number;
-  comments: number;
-  liked: boolean;
-  team?: string;
-}
+import Navigation from "./components/yului/Navigation";
+import { Toaster } from 'react-hot-toast';
 
-export interface Poll {
-  id: string;
-  question: string;
-  options: Array<{
-    id: string;
-    text: string;
-    votes: number;
-  }>;
-  author: string;
-  avatar: string;
-  timestamp: string;
-  team?: string;
-  totalVotes: number;
-  userVotes?: Record<string, string>; // 수정: 복수형 + 객체 구조
-}
+import type { Post, Poll } from './types/interfaces'
 
+// Pages
+import IntroPage from './pages/IntroPage';
+import LoginPage from './pages/LoginPage';
+import SignUpPage from './pages/SignUpPage';
+import HomePage from './pages/HomePage';
+import FeedPage from './pages/FeedPage';
+import PollsPage from './pages/PollsPage';
+import MyPage from './pages/MyPage';
+import PostDetailPage from './pages/PostDetailPage';
+import PollDetailPage from './pages/PollDetailPage';
+import ChatPage from './pages/ChatPage';
 
 export default function App() {
   const [showIntro, setShowIntro] = useState(true);
-  const [user, setUser] = useState(null);
   const [activeTab, setActiveTab] = useState('home');
   const [darkMode, setDarkMode] = useState(false);
   const [showChat, setShowChat] = useState(false);
-  const [selectedPostId, setSelectedPostId] = useState(null);
-  const [selectedPollId, setSelectedPollId] = useState(null);
-  const [activePage, setActivePage] = useState('home');
-  const navigateTo = (path: string) => {
-    if (path.startsWith('post-')) {
-      const id = path.split('-')[1];
-      setSelectedPostId(id);
-      setSelectedPollId(null);
-    } else if (path.startsWith('poll-')) {
-      const id = path.split('-')[1];
-      setSelectedPollId(id);
-      setSelectedPostId(null);
+  const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
+  const [selectedPollId, setSelectedPollId] = useState<string | null>(null);
+  const { initData } = useLocalData();
+  const { user, login, logout, signup, updateUser, setUser } = useAuth();
+
+  // ✅ 초기 데이터 1회만 생성
+  useEffect(() => {
+    const hasInit = localStorage.getItem('initDone');
+    if (!hasInit) {
+      initData();
+      localStorage.setItem('initDone', 'true');
+      console.log('🟢 초기 데이터 생성 완료');
     } else {
-      setSelectedPostId(null);
-      setSelectedPollId(null);
-      setActiveTab(path);
-    }
-    // 브라우저 히스토리에 경로 저장
-    window.history.pushState({ path }, '', `#${path}`);
-  };
-  // 🧭 페이지 제목 자동 변경
-  useEffect(() => {
-    let title = 'KBO 팬덤 커뮤니티';
-    if (selectedPostId) title = '게시글 상세보기 - KBO 팬덤 커뮤니티';
-    else if (selectedPollId) title = '투표 상세보기 - KBO 팬덤 커뮤니티';
-    else if (activeTab === 'feed') title = '피드 - KBO 팬덤 커뮤니티';
-    else if (activeTab === 'polls') title = '투표 - KBO 팬덤 커뮤니티';
-    else if (activeTab === 'mypage') title = '마이페이지 - KBO 팬덤 커뮤니티';
-    document.title = title;
-  }, [activeTab, selectedPostId, selectedPollId]);
-
-  // ✅ 브라우저 뒤로가기(popstate) 대응 (확장버전)
-  useEffect(() => {
-    const handlePopState = (event: PopStateEvent) => {
-      const state = event.state;
-      const hash = window.location.hash.replace('#', '');
-      const path = state?.path || hash;
-
-      // 🚀 경로가 없으면 홈으로
-      if (!path) {
-        setShowIntro(false);
-        setUser(null);
-        setActiveTab('home');
-        setSelectedPostId(null);
-        setSelectedPollId(null);
-        return;
-      }
-
-      // ✅ 인트로 / 로그인 / 회원가입 구분
-      if (path === 'intro') {
-        setShowIntro(true);
-        setUser(null);
-        return;
-      }
-      if (path === 'login') {
-        setShowIntro(false);
-        setUser(null);
-        return;
-      }
-      if (path === 'signup') {
-        setShowIntro(false);
-        setUser(null);
-        setActivePage('signup');
-        return;
-      }
-
-      // ✅ 게시글/투표 상세 보기
-      if (path.startsWith('post-')) {
-        setSelectedPostId(path.split('-')[1]);
-        setSelectedPollId(null);
-        return;
-      }
-      if (path.startsWith('poll-')) {
-        setSelectedPollId(path.split('-')[1]);
-        setSelectedPostId(null);
-        return;
-      }
-
-      // ✅ 일반 탭 (홈/피드/투표/마이페이지)
-      setSelectedPostId(null);
-      setSelectedPollId(null);
-      setShowIntro(false);
-      setActiveTab(path);
-    };
-
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, []);
-
-
-  // 🌟 인트로 및 초기 더미 데이터 로직
-  useEffect(() => {
-    const hasVisited = localStorage.getItem('hasVisited');
-    if (hasVisited) setShowIntro(false);
-
-    // 버전 관리: 데이터 초기화
-    const contentVersion = localStorage.getItem('contentVersion');
-    if (contentVersion !== 'kbo-v2') {
-      localStorage.removeItem('posts');
-      localStorage.removeItem('polls');
-      localStorage.removeItem('chatMessages');
-      localStorage.setItem('contentVersion', 'kbo-v2');
-      console.log('✅ KBO 콘텐츠로 업데이트되었습니다!');
-    }
-
-    if (!hasVisited) {
-      initializeDummyData(); // 최초 실행 한 번만 더미데이터 생성
-      localStorage.setItem('hasVisited', 'true');
+      console.log('🟢 기존 데이터 유지 (initData 생략)');
     }
   }, []);
 
-
-  // ✅ 더미 데이터 생성 함수
-  const initializeDummyData = () => {
-    if (!localStorage.getItem('posts')) {
-      const { teams, postTemplates, avatars, images, timestamps } = dummyPostsData;
-      const initialPosts = [];
-      let postId = 1;
-
-      teams.forEach((team) => {
-        const teamImages = images[team.id] || []; // ✅ 팀별 이미지 배열 가져오기
-
-        postTemplates.forEach((template, idx) => {
-          const post = {
-            id: postId.toString(),
-            author: `${team.name} 팬${idx + 1}`,
-            avatar: avatars[idx % avatars.length],
-            content: template.content,
-            team: team,
-            image: template.hasImage
-              ? teamImages[idx % teamImages.length] // ✅ 팀별 이미지 랜덤 지정
-              : undefined,
-            likes: Math.floor(Math.random() * 500) + 10,
-            timestamp: timestamps[idx % timestamps.length],
-            liked: Math.random() > 0.7,
-            commentsList: [],
-          };
-          initialPosts.push(post);
-          postId++;
-        });
-      });
-
-      initialPosts.sort(() => Math.random() - 0.5);
-      localStorage.setItem('posts', JSON.stringify(initialPosts));
-      console.log('✅ Posts 더미 데이터 생성 완료!');
-    }
-
-    if (!localStorage.getItem('polls')) {
-      localStorage.setItem('polls', JSON.stringify(dummyPollsData));
-      console.log('✅ Polls 더미 데이터 생성 완료!');
-    }
-  };
-
-
-
-  // ✅ 인트로 끝나고 "시작하기" 누를 때
-  const handleEnterApp = () => {
-    localStorage.setItem('hasVisited', 'true');
-    setShowIntro(false);
-    initializeDummyData(); // 인트로 후 즉시 생성
-  };
-
-
-
-  // ✅ 사용자 로그인 상태 유지
+  // ✅ 로그인 유지
   useEffect(() => {
     const savedUser = localStorage.getItem('currentUser');
     if (savedUser) setUser(JSON.parse(savedUser));
   }, []);
 
+  const navigateTo = (path: string) => {
+    setSelectedPostId(null);
+    setSelectedPollId(null);
+    setActiveTab(path);
+    window.history.pushState({ path }, '', `#${path}`);
+  };
 
-  // 다크모드 로컬스토리지에서 불러오기
+  // ✅ 다크모드
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme');
     if (savedTheme === 'dark') {
@@ -231,12 +65,6 @@ export default function App() {
     }
   }, []);
 
-  // 탭 전환시 스크롤 맨 위로
-  useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, [activeTab]);
-
-  // 다크모드 토글
   const toggleDarkMode = () => {
     const newMode = !darkMode;
     setDarkMode(newMode);
@@ -249,153 +77,50 @@ export default function App() {
     }
   };
 
+  if (showIntro) return <IntroPage onEnter={() => setShowIntro(false)} />;
 
-  // 로그인/로그아웃
-  const handleLogin = (userData: any) => {
-    setUser(userData);
-    localStorage.setItem('currentUser', JSON.stringify(userData));
-  };
-
-  // ✅ 회원가입 완료 후 자동 로그인
-  const handleSignupSuccess = (newUser) => {
-    toast.success(`${newUser.username}님, 회원가입이 완료되었습니다! 🎉`);
-    setUser(newUser);
-    localStorage.setItem('currentUser', JSON.stringify(newUser));
-    localStorage.setItem('users', JSON.stringify([
-      ...(JSON.parse(localStorage.getItem('users') || '[]')),
-      newUser
-    ]));
-    navigateTo('home');
-  };
-
-
-  const handleLogout = () => {
-    setUser(null);
-    localStorage.removeItem('currentUser');
-    setActiveTab('home');
-  };
-
-  const handleUpdateUser = (updatedUserData) => {
-    setUser(updatedUserData);
-    localStorage.setItem('currentUser', JSON.stringify(updatedUserData));
-  };
-
-
-  // 탭 구성
-  const tabs = [
-    { id: 'home', icon: Home, label: '홈' },
-    { id: 'feed', icon: Rss, label: '피드' },
-    { id: 'polls', icon: TrendingUp, label: '투표' },
-    { id: 'mypage', icon: User, label: '마이' },
-  ];
+  if (!user) {
+    const hash = window.location.hash.replace('#', '');
+    return hash === 'signup'
+      ? <SignUpPage onSignup={signup} navigateTo={navigateTo} />
+      : <LoginPage onLogin={login} navigateTo={navigateTo} />;
+  }
 
   const renderPage = () => {
     if (selectedPostId)
-      return (
-        <PostDetailPage
-          postId={selectedPostId}
-          onBack={() => window.history.back()}
-          isDarkMode={darkMode}
-          onToggleDarkMode={toggleDarkMode}
-        />
-      );
+      return <PostDetailPage postId={selectedPostId} onBack={() => setSelectedPostId(null)} />;
 
     if (selectedPollId)
-      return (
-        <PollDetailPage
-          pollId={selectedPollId}
-          onBack={() => setSelectedPollId(null)}
-          isDarkMode={darkMode}
-          onToggleDarkMode={toggleDarkMode}
-        />
-      );
+      return <PollDetailPage pollId={selectedPollId} onBack={() => setSelectedPollId(null)} />;
+
     switch (activeTab) {
       case 'home':
-        return (
-          <HomePage
-            user={user}
-            onNavigate={setActiveTab}
-            onPostClick={setSelectedPostId}
-            onPollClick={setSelectedPollId}
-            onChatOpen={() => setShowChat(true)}
-          />
-        );
+        return <HomePage user={user} onNavigate={setActiveTab} onChatOpen={() => setShowChat(true)} />;
       case 'feed':
         return <FeedPage onPostClick={setSelectedPostId} />;
       case 'polls':
         return <PollsPage onPollClick={setSelectedPollId} />;
       case 'mypage':
-        return <MyPage user={user} onLogout={handleLogout} onUpdateUser={handleUpdateUser} onNavigate={setActiveTab} />;
+        return <MyPage user={user} onLogout={logout} onUpdateUser={updateUser} onNavigate={setActiveTab} />;
       default:
         return null;
     }
   };
 
-  const pageVariants = {
-    initial: { opacity: 0, y: 20 },
-    animate: { opacity: 1, y: 0, transition: { duration: 0.3 } },
-    exit: { opacity: 0, transition: { duration: 0.2 } },
-  };
-
-  //  인트로
-  if (showIntro) return <IntroPage onEnter={handleEnterApp} />;
-  //  로그인
-  if (!user) {
-    const hash = window.location.hash.replace('#', '');
-    if (hash === 'signup') {
-      return <SignUpPage onSignup={handleSignupSuccess} navigateTo={navigateTo} />;
-    } else {
-      return <LoginPage onLogin={handleLogin} navigateTo={navigateTo} />;
-    }
-  }
-
   return (
     <div className="min-h-screen transition-colors relative">
-      <div style={{ width: '100%', height: '100vh', position: 'fixed' }}>
-        <LiquidEther
-          colors={['#5227FF', '#FF9FFC', '#B19EEF']}
-          mouseForce={20}
-          cursorSize={100}
-          isViscous={false}
-          viscous={30}
-          iterationsViscous={32}
-          iterationsPoisson={32}
-          resolution={0.5}
-          isBounce={false}
-          autoDemo={true}
-          autoSpeed={0.5}
-          autoIntensity={2.2}
-          takeoverDuration={0.25}
-          autoResumeDelay={3000}
-          autoRampDuration={0.6}
-        />
-      </div>
-      {/* 배경 그라디언트 */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden opacity-40 dark:opacity-30">
-        <div className="absolute -top-1/2 -left-1/2 w-full h-full bg-gradient-to-br from-teal-400/20 to-cyan-400/20 dark:from-teal-400/30 dark:to-cyan-400/30 rounded-full blur-3xl" />
-        <div className="absolute -bottom-1/2 -right-1/2 w-full h-full bg-gradient-to-tl from-cyan-400/20 to-sky-400/20 dark:from-cyan-400/30 dark:to-teal-400/30 rounded-full blur-3xl" />
-      </div>
+      <LiquidEther colors={['#5227FF', '#FF9FFC', '#B19EEF']} cursorSize={100} />
 
-      {/* 헤더 - 통일된 헤더 */}
-      <motion.header
-        initial={{ y: -100 }}
-        animate={{ y: 0 }}
-        transition={{ type: 'spring', stiffness: 100 }}
-        className="fixed top-0 left-0 right-0 bg-white/80 dark:bg-[#1d293d]/80 backdrop-blur-xl border-b border-teal-200/50 dark:border-[#00d5be]/30 z-50 transition-colors shadow-sm dark:shadow-[#00d5be]/10"
-      >
-        <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between relative">
-          {/* 왼쪽 영역 - 뒤로가기 버튼 */}
+      {/* Header */}
+      <motion.header className="fixed top-0 left-0 right-0 bg-white/80 dark:bg-[#1d293d]/80 backdrop-blur-xl border-b border-teal-200/50 dark:border-[#00d5be]/30 z-50 transition-colors shadow-sm">
+        <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center w-12">
             {(selectedPostId || selectedPollId || activeTab !== 'home') && (
               <motion.button
                 onClick={() => {
-                  if (selectedPostId) {
-                    setSelectedPostId(null);
-                  } else if (selectedPollId) {
-                    setSelectedPollId(null);
-                  } else {
-                    setActiveTab('home');
-                  }
+                  if (selectedPostId) setSelectedPostId(null);
+                  else if (selectedPollId) setSelectedPollId(null);
+                  else setActiveTab('home');
                 }}
                 className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
                 whileHover={{ scale: 1.1 }}
@@ -406,26 +131,10 @@ export default function App() {
             )}
           </div>
 
-          {/* 중앙 영역 - 제목 */}
-          <h1 className="absolute left-1/2 -translate-x-1/2 text-slate-700 dark:text-[#e2e8f0] flex items-center gap-2">
-            {selectedPostId ? (
-              '게시글'
-            ) : selectedPollId ? (
-              '투표'
-            ) : activeTab === 'home' ? (
-              '⚾ KBO 팬덤'
-            ) : activeTab === 'feed' ? (
-              '피드'
-            ) : activeTab === 'polls' ? (
-              '투표'
-            ) : activeTab === 'mypage' ? (
-              '마이페이지'
-            ) : (
-              '⚾ KBO 팬덤'
-            )}
+          <h1 className="text-slate-700 dark:text-[#e2e8f0]">
+            {selectedPostId ? '게시글' : selectedPollId ? '투표' : activeTab === 'mypage' ? '마이페이지' : '⚾ KBO 팬덤'}
           </h1>
 
-          {/* 오른쪽 영역 - 다크모드 토글 */}
           <motion.button
             onClick={toggleDarkMode}
             className="p-2 rounded-full hover:bg-teal-100 dark:hover:bg-[#00d5be]/20 transition-colors"
@@ -434,23 +143,11 @@ export default function App() {
           >
             <AnimatePresence mode="wait">
               {darkMode ? (
-                <motion.div
-                  key="sun"
-                  initial={{ rotate: -90, scale: 0 }}
-                  animate={{ rotate: 0, scale: 1 }}
-                  exit={{ rotate: 90, scale: 0 }}
-                  transition={{ duration: 0.2 }}
-                >
+                <motion.div key="sun" initial={{ rotate: -90, scale: 0 }} animate={{ rotate: 0, scale: 1 }} exit={{ rotate: 90, scale: 0 }} transition={{ duration: 0.2 }}>
                   <Sun className="w-5 h-5 text-[#00d5be]" />
                 </motion.div>
               ) : (
-                <motion.div
-                  key="moon"
-                  initial={{ rotate: 90, scale: 0 }}
-                  animate={{ rotate: 0, scale: 1 }}
-                  exit={{ rotate: -90, scale: 0 }}
-                  transition={{ duration: 0.2 }}
-                >
+                <motion.div key="moon" initial={{ rotate: 90, scale: 0 }} animate={{ rotate: 0, scale: 1 }} exit={{ rotate: -90, scale: 0 }} transition={{ duration: 0.2 }}>
                   <Moon className="w-5 h-5 text-teal-600" />
                 </motion.div>
               )}
@@ -459,22 +156,12 @@ export default function App() {
         </div>
       </motion.header>
 
-      {/* 메인 콘텐츠 */}
+      {/* Main */}
       <main className="max-w-2xl mx-auto pt-14 pb-20 relative">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={selectedPostId || selectedPollId || activeTab}
-            variants={pageVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-          >
-            {renderPage()}
-          </motion.div>
-        </AnimatePresence>
+        <AnimatePresence mode="wait">{renderPage()}</AnimatePresence>
       </main>
 
-      {/* AI 챗봇 플로팅 버튼 */}
+      {/* Chat */}
       <motion.button
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
@@ -484,31 +171,13 @@ export default function App() {
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
       >
-        {showChat ? (
-          <X className="w-6 h-6" />
-        ) : (
-          <MessageCircle className="w-6 h-6" />
-        )}
+        {showChat ? <X className="w-6 h-6" /> : <MessageCircle className="w-6 h-6" />}
       </motion.button>
 
-      {/* AI 챗봇 */}
       <AnimatePresence>
         {showChat && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          >
-            {/* 배경 오버레이 */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setShowChat(false)}
-              className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-            />
-            {/* 챗봇 창 */}
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowChat(false)} className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
             <div className="relative w-full max-w-md max-h-[80vh]">
               <ChatPage />
             </div>
@@ -516,65 +185,7 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      {/* 하단 네비게이션 */}
-      <motion.nav
-        initial={{ y: 100 }}
-        animate={{ y: 0 }}
-        transition={{ type: 'spring', stiffness: 100, delay: 0.2 }}
-        className="fixed bottom-0 left-0 right-0 bg-white/80 dark:bg-[#1d293d]/80 backdrop-blur-xl border-t border-[rgba(150,247,228,0.5)] dark:border-[#00d5be]/30 z-50 transition-colors shadow-lg dark:shadow-[#00d5be]/10"
-      >
-        <div className="max-w-2xl mx-auto px-2 py-2">
-          <div className="flex items-center justify-around">
-            {tabs.map((tab, index) => {
-              const Icon = tab.icon;
-              const isActive = activeTab === tab.id;
-
-              const handleTabClick = () => {
-                if (selectedPostId) setSelectedPostId(null);
-                if (selectedPollId) setSelectedPollId(null);
-                navigateTo(tab.id); // ✅ 이렇게 변경
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              };
-
-              return (
-                <motion.button
-                  key={tab.id}
-                  onClick={handleTabClick}
-                  className="flex flex-col items-center gap-1 px-5 py-2 rounded-2xl transition-colors relative cursor-pointer"
-                  whileTap={{ scale: 0.95 }}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                >
-                  <Icon
-                    className={`w-6 h-6 transition-colors ${isActive
-                      ? 'text-white dark:text-[#00d5be]'
-                      : 'text-[#01B9D1] dark:text-gray-500'
-                      }`}
-                  />
-                  <span
-                    className={`text-xs transition-colors ${isActive
-                      ? 'text-white dark:text-[#00d5be]'
-                      : 'text-[#01B9D1] dark:text-gray-500'
-                      }`}
-                  >
-                    {tab.label}
-                  </span>
-
-                  {/* 활성 탭 배경 */}
-                  {isActive && (
-                    <motion.div
-                      layoutId="activeTab"
-                      className="absolute inset-0 bg-gradient-to-r from-[#00BBA7] to-[#00B8DB] dark:bg-gradient-to-r dark:from-[#00d5be]/20 dark:to-[#00d5be]/20 rounded-2xl -z-10"
-                      transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                    />
-                  )}
-                </motion.button>
-              );
-            })}
-          </div>
-        </div>
-      </motion.nav>
+      <Navigation activeTab={activeTab} setActiveTab={setActiveTab} navigateTo={navigateTo} />
       <Toaster position="top-center" />
     </div>
   );

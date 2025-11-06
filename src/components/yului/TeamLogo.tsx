@@ -1,14 +1,5 @@
 import { motion } from "framer-motion";
-import kiaLogo from "../assets/kia.png";
-import hanwhaLogo from "../assets/hanwha.png";
-import doosanLogo from "../assets/doosan.png";
-import lgLogo from "../assets/lg.png";
-import ktLogo from "../assets/kt.png";
-import kiwoomLogo from "../assets/kiwoom.png";
-import ssgLogo from "../assets/ssg.png";
-import lotteLogo from "../assets/lotte.png";
-import samsungLogo from "../assets/samsung.png";
-import ncLogo from "../assets/nc.png";
+
 
 interface Team {
   id: string;
@@ -40,16 +31,16 @@ export default function TeamLogo({ team, size = "md" }: TeamLogoProps) {
 
   // ✅ 로고 이미지 매핑
   const logoImages: Record<string, string> = {
-    kia: kiaLogo,
-    hanwha: hanwhaLogo,
-    doosan: doosanLogo,
-    lg: lgLogo,
-    kt: ktLogo,
-    kiwoom: kiwoomLogo,
-    ssg: ssgLogo,
-    lotte: lotteLogo,
-    samsung: samsungLogo,
-    nc: ncLogo,
+    kia: "/assets/kia.png",
+    hanwha: "/assets/hanwha.png",
+    doosan: "/assets/doosan.png",
+    lg: "/assets/lg.png",
+    kt: "/assets/kt.png",
+    kiwoom: "/assets/kiwoom.png",
+    ssg: "/assets/ssg.png",
+    lotte: "/assets/lotte.png",
+    samsung: "/assets/samsung.png",
+    nc: "/assets/nc.png",
   };
 
   const logoImage = team?.id ? logoImages[team.id] : null;

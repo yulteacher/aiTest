@@ -1,4 +1,4 @@
-import { KBO_TEAMS } from '../constants/teams';
+import { KBO_TEAMS } from './constants/teams';
 
 export const dummyPollsData = [
   {

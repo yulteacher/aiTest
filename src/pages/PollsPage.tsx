@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, useMotionValue, useTransform, animate } from 'framer-motion';
 import { Check, Plus, Award, Zap, Trash2 } from 'lucide-react';
-import TeamSelector from './TeamSelector';
-import TeamLogo from './TeamLogo';
+import TeamSelector from '../components/TeamSelector';
+import TeamLogo from '../components/yului/TeamLogo';
 import { toast } from 'sonner';
 
 function AnimatedCount({ value }) {

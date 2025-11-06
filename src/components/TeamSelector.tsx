@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown } from 'lucide-react';
-import { KBO_TEAMS } from '../constants/teams';
-import TeamLogo from './TeamLogo';
+import { KBO_TEAMS } from '../data/constants/teams';
+import TeamLogo from './yului/TeamLogo';
 
 export default function TeamSelector({ selectedTeam, onSelectTeam, showAll = true, label = null }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -28,8 +28,8 @@ export default function TeamSelector({ selectedTeam, onSelectTeam, showAll = tru
       <AnimatePresence>
         {isOpen && (
           <>
-            <div 
-              className="fixed inset-0 z-[60]" 
+            <div
+              className="fixed inset-0 z-[60]"
               onClick={() => setIsOpen(false)}
             />
             <motion.div
@@ -52,7 +52,7 @@ export default function TeamSelector({ selectedTeam, onSelectTeam, showAll = tru
                   <span className="text-gray-900 dark:text-gray-100">전체 구단</span>
                 </button>
               )}
-              
+
               <div className="max-h-80 overflow-y-auto pr-2 scrollbar-liquid-glass">
                 {KBO_TEAMS.map((team) => (
                   <motion.button
@@ -62,11 +62,10 @@ export default function TeamSelector({ selectedTeam, onSelectTeam, showAll = tru
                       setIsOpen(false);
                     }}
                     whileHover={{ x: 4 }}
-                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors text-left ${
-                      selectedTeam?.id === team.id
-                        ? 'bg-slate-100 dark:bg-slate-700'
-                        : 'hover:bg-gray-100 dark:hover:bg-gray-700'
-                    }`}
+                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors text-left ${selectedTeam?.id === team.id
+                      ? 'bg-slate-100 dark:bg-slate-700'
+                      : 'hover:bg-gray-100 dark:hover:bg-gray-700'
+                      }`}
                   >
                     <TeamLogo team={team} size="sm" />
                     <span className="text-gray-900 dark:text-gray-100">{team.name}</span>

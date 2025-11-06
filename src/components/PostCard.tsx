@@ -1,8 +1,8 @@
 // src/components/PostCard.tsx
 import { motion } from 'framer-motion';
 import { Heart, MessageCircle, Share2, Trash2 } from 'lucide-react';
-import TeamAvatar from './TeamAvatar';
-import TeamLogo from './TeamLogo';
+import TeamAvatar from './yului/TeamAvatar';
+import TeamLogo from './yului/TeamLogo';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { toast } from 'sonner';
 

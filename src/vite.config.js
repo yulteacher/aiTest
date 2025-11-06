@@ -5,7 +5,7 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      '@': '/src',
+      '@': '/src', // ✅ 절대경로 설정
     },
   },
   build: {

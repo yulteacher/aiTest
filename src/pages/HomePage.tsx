@@ -1,11 +1,20 @@
 import { useState, useEffect, useMemo } from 'react';
 import { motion, useMotionValue, useTransform, animate } from "framer-motion";
 import { Heart, TrendingUp, MessageCircle, Users, Award, ChevronRight, Flame } from 'lucide-react';
-import { ImageWithFallback } from './figma/ImageWithFallback';
-import TeamLogo from './TeamLogo';
-import LightRays from "./reactbits/LightRays";
+import { ImageWithFallback } from '../components/figma/ImageWithFallback';
+import TeamLogo from '../components/yului/TeamLogo';
+import LightRays from "../components/reactbits/LightRays";
 import { dummyPollsData } from "../data/dummyPolls";
-export default function HomePage({ user, onNavigate, onPostClick, onPollClick, onChatOpen }) {
+
+interface HomePageProps {
+  user: any;
+  onNavigate: (tab: string) => void;
+  onPostClick?: (id: string) => void;  // ← ? 추가
+  onPollClick?: (id: string) => void;  // ← ? 추가
+  onChatOpen: () => void;
+}
+
+export default function HomePage({ user, onNavigate, onPostClick, onPollClick, onChatOpen }: HomePageProps) {
   const [posts, setPosts] = useState([]);
   const [polls, setPolls] = useState([]);
 

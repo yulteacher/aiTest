@@ -2,11 +2,16 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Heart, MessageCircle, Share2, ArrowLeft, Edit2, Trash2, Send, Check, X, Moon, Sun } from 'lucide-react';
 import { toast } from 'sonner';
-import TeamLogo from './TeamLogo';
-import TeamAvatar from './TeamAvatar';
-import { ImageWithFallback } from './figma/ImageWithFallback';
-
-export default function PostDetailPage({ postId, onBack, isDarkMode, onToggleDarkMode }) {
+import TeamLogo from '../components/yului/TeamLogo';
+import TeamAvatar from '../components/yului/TeamAvatar';
+import { ImageWithFallback } from '../components/figma/ImageWithFallback';
+interface PostDetailPageProps {
+  postId: string | null;
+  onBack: () => void;
+  isDarkMode?: boolean;
+  onToggleDarkMode?: () => void;
+}
+export default function PostDetailPage({ postId, onBack, isDarkMode, onToggleDarkMode }: PostDetailPageProps) {
   const [post, setPost] = useState(null);
   const [posts, setPosts] = useState([]);
   const [newComment, setNewComment] = useState('');
@@ -19,7 +24,7 @@ export default function PostDetailPage({ postId, onBack, isDarkMode, onToggleDar
   useEffect(() => {
     // 스크롤을 최상단으로
     window.scrollTo(0, 0);
-    
+
     const savedPosts = localStorage.getItem('posts');
     if (savedPosts) {
       const parsedPosts = JSON.parse(savedPosts);
@@ -101,7 +106,7 @@ export default function PostDetailPage({ postId, onBack, isDarkMode, onToggleDar
       if (p.id === postId) {
         return {
           ...p,
-          commentsList: p.commentsList.map(c => 
+          commentsList: p.commentsList.map(c =>
             c.id === commentId ? { ...c, content: editCommentContent, timestamp: '방금 전 (수정됨)' } : c
           )
         };
@@ -281,9 +286,8 @@ export default function PostDetailPage({ postId, onBack, isDarkMode, onToggleDar
             <motion.button
               whileTap={{ scale: 0.9 }}
               onClick={handleLike}
-              className={`flex items-center gap-2 ${
-                post.isLiked ? 'text-red-500' : 'text-gray-600 dark:text-gray-400'
-              }`}
+              className={`flex items-center gap-2 ${post.isLiked ? 'text-red-500' : 'text-gray-600 dark:text-gray-400'
+                }`}
             >
               <Heart className="w-5 h-5" fill={post.isLiked ? 'currentColor' : 'none'} />
               <span>{post.likes}</span>

@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Edit2, Settings, LogOut, Award, Zap, Heart, Bell, MessageCircle, TrendingUp, UserPlus, X, Camera, Check, ChevronDown } from 'lucide-react';
-import TeamAvatar from './TeamAvatar';
-import { KBO_TEAMS } from '../constants/teams';
+import { KBO_TEAMS } from '../data/constants/teams';
 import { toast } from 'sonner';
-import TeamLogo from './TeamLogo';
+import TeamLogo from '../components/yului/TeamLogo';
+import TeamAvatar from '../components/yului/TeamAvatar';
 import { useXPSystem } from "../hooks/useXPSystem";
 import { useLocalData } from "../hooks/useLocalData";
+import type { Post, Poll } from '../types/interfaces'
+
 
 export default function MyPage({ user, onLogout, onUpdateUser, onNavigate }) {
   const [notifications, setNotifications] = useState([]);
@@ -14,8 +16,8 @@ export default function MyPage({ user, onLogout, onUpdateUser, onNavigate }) {
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [editedUser, setEditedUser] = useState({ ...user });
   const [newProfileImage, setNewProfileImage] = useState(null);
-  const { currentUser, setCurrentUser, userData, setUserData } = useLocalData();
-  const { getLevelInfo } = useXPSystem(currentUser, setCurrentUser, userData, setUserData);
+  const { currentUser, setCurrentUser } = useLocalData(); // ✅ userData 제거
+  const { getLevelInfo } = useXPSystem(currentUser, setCurrentUser);
 
   const { level, xp, progress, toNext } = getLevelInfo();
 
