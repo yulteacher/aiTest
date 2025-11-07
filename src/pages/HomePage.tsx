@@ -20,8 +20,6 @@ export default function HomePage({ user, onNavigate, onPostClick, onPollClick, o
 
   useEffect(() => {
     const savedPolls = localStorage.getItem('polls');
-
-    // ✅ polls가 없을 때만 더미데이터 세팅
     if (!savedPolls) {
       localStorage.setItem('polls', JSON.stringify(dummyPollsData));
     }
@@ -29,7 +27,23 @@ export default function HomePage({ user, onNavigate, onPostClick, onPollClick, o
     const savedPosts = localStorage.getItem('posts');
     const pollsData = JSON.parse(localStorage.getItem('polls') || "[]");
 
-    if (savedPosts) setPosts(JSON.parse(savedPosts));
+    if (savedPosts) {
+      const postsData = JSON.parse(savedPosts);
+      // ✅ posts에 authorId → username, avatar 보정
+      const users = JSON.parse(localStorage.getItem('users') || "[]");
+      const enriched = postsData.map((p: any) => {
+        const author = users.find((u: any) => u.id === p.authorId);
+        return {
+          ...p,
+          author: author ? author.username : "익명",
+          avatar: author ? author.avatar : "https://placekitten.com/100/100",
+          likes: p.likes?.length || 0,
+          comments: p.comments?.length || 0,
+        };
+      });
+      setPosts(enriched);
+    }
+
     if (pollsData) setPolls(pollsData);
   }, []);
 

@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import TeamLogo from '../components/yului/TeamLogo';
 import TeamAvatar from '../components/yului/TeamAvatar';
 import { ImageWithFallback } from '../components/figma/ImageWithFallback';
+
 interface PostDetailPageProps {
   postId: string | null;
   onBack: () => void;

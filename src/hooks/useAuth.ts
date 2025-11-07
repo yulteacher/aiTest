@@ -1,26 +1,17 @@
 // =============================
-// 🔐 useAuth.ts
-// 로그인 / 회원가입 / 로그아웃 관리 훅 (수정 버전)
+// 🔐 useAuth.ts (v7 — localData 연동 버전)
+// 로그인 / 회원가입 / 로그아웃 / 프로필 수정
 // =============================
 import { useState, useEffect } from "react";
-import { toast } from "react-hot-toast";
+import { toast } from "sonner";
 import { useLocalData } from "./useLocalData";
 import type { User } from "../types/interfaces";
 
 export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null);
-  const { get, set, registerUser, initData } = useLocalData();
+  const { get, set } = useLocalData(); // ✅ save → set 으로 변경
 
-  // ✅ 데이터 초기화 자동 보정 (없으면 새로 주입)
-  useEffect(() => {
-    const users = get("users");
-    if (!users || users.length === 0) {
-      console.log("⚙️ useAuth: users 데이터 없음 → initData() 실행");
-      initData();
-    }
-  }, []);
-
-  // ✅ 로그인 상태 유지
+  // ✅ 로그인 유지
   useEffect(() => {
     const savedUser = localStorage.getItem("currentUser");
     if (savedUser) setUser(JSON.parse(savedUser));
@@ -55,27 +46,45 @@ export const useAuth = () => {
     toast("로그아웃 되었습니다 👋");
   };
 
-  // ✅ 회원가입 완료
-  const signup = (newUser: Omit<User, "xp" | "level" | "badges" | "joinedAt">) => {
-    registerUser(newUser);
-    const users = get("users");
-    const created = users.find((u) => u.username === newUser.username);
-    if (created) {
-      setUser(created);
-      localStorage.setItem("currentUser", JSON.stringify(created));
-      toast.success(`${created.username}님, 가입을 환영합니다! 🎉`);
+  // ✅ 회원가입
+  const signup = (
+    newUser: Omit<User, "xp" | "level" | "badges" | "joinedAt">
+  ) => {
+    const users = get("users") || [];
+
+    if (users.find((u) => u.username === newUser.username)) {
+      toast.error("이미 존재하는 사용자입니다.");
+      return false;
     }
+
+    const created: User = {
+      ...newUser,
+      id: `u_${Date.now()}`,
+      xp: 0,
+      level: 1,
+      badges: [],
+      joinedAt: new Date().toISOString(),
+    };
+
+    const updated = [...users, created];
+    set("users", updated);
+    localStorage.setItem("currentUser", JSON.stringify(created));
+    setUser(created);
+    toast.success(`${created.username}님, 가입을 환영합니다! 🎉`);
+    return true;
   };
 
-  // ✅ 프로필 업데이트
+  // ✅ 프로필 수정
   const updateUser = (updatedUserData: User) => {
     setUser(updatedUserData);
     localStorage.setItem("currentUser", JSON.stringify(updatedUserData));
-    const users = get("users");
+
+    const users = get("users") || [];
     const idx = users.findIndex((u) => u.id === updatedUserData.id);
     if (idx !== -1) {
       users[idx] = updatedUserData;
       set("users", users);
+      toast.success("프로필이 저장되었습니다 ✅");
     }
   };
 

@@ -28,14 +28,14 @@ export default function App() {
   const [showChat, setShowChat] = useState(false);
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
   const [selectedPollId, setSelectedPollId] = useState<string | null>(null);
-  const { initData } = useLocalData();
+  // const { initData } = useLocalData();
   const { user, login, logout, signup, updateUser, setUser } = useAuth();
 
   // ✅ 초기 데이터 1회만 생성
   useEffect(() => {
     const hasInit = localStorage.getItem('initDone');
     if (!hasInit) {
-      initData();
+      // initData();
       localStorage.setItem('initDone', 'true');
       console.log('🟢 초기 데이터 생성 완료');
     } else {
@@ -82,7 +82,13 @@ export default function App() {
   if (!user) {
     const hash = window.location.hash.replace('#', '');
     return hash === 'signup'
-      ? <SignUpPage onSignup={signup} navigateTo={navigateTo} />
+      ? <SignUpPage
+        onSignup={(newUser) => {
+          setUser(newUser);      // ✅ useAuth에서 가져온 setUser 사용
+          navigateTo("home");    // ✅ navigate → navigateTo (App 내부 함수)
+        }}
+        navigateTo={navigateTo}
+      />
       : <LoginPage onLogin={login} navigateTo={navigateTo} />;
   }
 

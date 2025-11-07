@@ -26,37 +26,25 @@ export default function MyPage({ user, onLogout, onUpdateUser, onNavigate }) {
     if (savedNotifications) {
       setNotifications(JSON.parse(savedNotifications));
     } else {
-      const initialNotifications = [
+      const defaults = [
         {
-          id: '1',
-          type: 'like',
-          user: '야구덕후',
+          id: '1', type: 'like', user: '야구덕후',
           avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop',
-          message: '님이 회원님의 경기 리뷰를 좋아합니다',
-          timestamp: '5분 전',
-          read: false,
+          message: '님이 회원님의 경기 리뷰를 좋아합니다', timestamp: '5분 전', read: false,
         },
         {
-          id: '2',
-          type: 'comment',
-          user: 'KBO매니아',
+          id: '2', type: 'comment', user: 'KBO매니아',
           avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop',
-          message: '님이 회원님의 게시물에 댓글을 남겼습니다',
-          timestamp: '1시간 전',
-          read: false,
+          message: '님이 회원님의 게시물에 댓글을 남겼습니다', timestamp: '1시간 전', read: false,
         },
         {
-          id: '3',
-          type: 'poll',
-          user: '야구팬',
+          id: '3', type: 'poll', user: '야구팬',
           avatar: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=100&h=100&fit=crop',
-          message: '님의 우승팀 예상 투표에 453명이 참여했습니다',
-          timestamp: '2시간 전',
-          read: true,
+          message: '님의 우승팀 예상 투표에 453명이 참여했습니다', timestamp: '2시간 전', read: true,
         },
       ];
-      setNotifications(initialNotifications);
-      localStorage.setItem('notifications', JSON.stringify(initialNotifications));
+      setNotifications(defaults);
+      localStorage.setItem('notifications', JSON.stringify(defaults));
     }
   }, []);
 
@@ -105,33 +93,76 @@ export default function MyPage({ user, onLogout, onUpdateUser, onNavigate }) {
     localStorage.setItem('notifications', JSON.stringify(updatedNotifications));
   };
 
-  const handleImageUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setNewProfileImage(reader.result);
-        setEditedUser({ ...editedUser, avatar: reader.result });
+  // ✅ 이미지 업로드 (자동 압축 포함)
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const img = new Image();
+      img.src = reader.result as string;
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+
+        // ✅ 해상도 제한 (최대 256x256으로 리사이즈)
+        const maxSize = 256;
+        let { width, height } = img;
+        if (width > height) {
+          if (width > maxSize) {
+            height *= maxSize / width;
+            width = maxSize;
+          }
+        } else {
+          if (height > maxSize) {
+            width *= maxSize / height;
+            height = maxSize;
+          }
+        }
+        canvas.width = width;
+        canvas.height = height;
+
+        // ✅ 이미지 그리기 (압축 전처리)
+        ctx?.drawImage(img, 0, 0, width, height);
+
+        // ✅ WebP로 변환 + 품질 0.7 설정
+        const compressed = canvas.toDataURL("image/webp", 0.7);
+
+        // ✅ 상태 반영
+        setNewProfileImage(compressed);
+        setEditedUser(prev => ({ ...prev, avatar: compressed }));
+        toast.success("이미지가 자동으로 최적화되었습니다 ⚡");
       };
-      reader.readAsDataURL(file);
-    }
+    };
+    reader.readAsDataURL(file);
   };
+
 
   const handleSaveProfile = () => {
     // 로컬스토리지의 사용자 정보 업데이트
     const users = JSON.parse(localStorage.getItem('users') || '[]');
-    const updatedUsers = users.map(u =>
-      u.username === user.username
-        ? { ...u, avatar: editedUser.avatar, team: editedUser.team, bio: editedUser.bio }
-        : u
-    );
+    const updatedUsers = users.map(u => {
+      if (u.username === user.username) {
+        if (editedUser.avatar) {
+          // ✅ avatarKey에만 새 이미지 저장
+          localStorage.setItem(u.avatarKey, editedUser.avatar);
+        }
+        return { ...u, team: editedUser.team, bio: editedUser.bio };
+      }
+      return u;
+    });
     localStorage.setItem('users', JSON.stringify(updatedUsers));
+    const updatedCurrentUser = {
+      ...user,
+      team: editedUser.team,
+      bio: editedUser.bio,
+    };
+    if (onUpdateUser) onUpdateUser({
+      ...updatedCurrentUser,
+      avatar: editedUser.avatar || localStorage.getItem(user.avatarKey)
+    });
 
-    // 현재 세션의 사용자 정보 업데이트 (App.tsx의 user state 업데이트)
-    const updatedCurrentUser = { ...user, avatar: editedUser.avatar, team: editedUser.team, bio: editedUser.bio };
-    if (onUpdateUser) {
-      onUpdateUser(updatedCurrentUser);
-    }
 
     setIsEditingProfile(false);
     setNewProfileImage(null);
@@ -139,12 +170,6 @@ export default function MyPage({ user, onLogout, onUpdateUser, onNavigate }) {
   };
 
   const unreadCount = notifications.filter(n => !n.read).length;
-
-  useEffect(() => {
-    // ✅ 팀 변경 시 TeamAvatar 즉시 새로고침
-    setEditedUser(prev => ({ ...prev }));
-  }, [editedUser.team]);
-
   return (
     <div className="p-4 space-y-4">
       {/* 탭 전환 */}
@@ -219,6 +244,7 @@ export default function MyPage({ user, onLogout, onUpdateUser, onNavigate }) {
                     </label>
                   </motion.div>
                 ) : (
+
                   <TeamAvatar
                     team={user?.team?.name}
                     src={user?.avatar}
@@ -243,8 +269,11 @@ export default function MyPage({ user, onLogout, onUpdateUser, onNavigate }) {
                       <select
                         value={editedUser?.team?.id || ''}
                         onChange={(e) => {
-                          const selectedTeam = KBO_TEAMS.find(t => t.id === e.target.value);
-                          setEditedUser({ ...editedUser, team: selectedTeam });
+                          setEditedUser(prev => ({
+                            ...prev,
+                            team: e.target.value, // ✅ 객체 대신 id 문자열만 저장
+                            avatar: prev.avatar,
+                          }));
                         }}
                         className="w-full bg-white/20 text-white rounded-xl pl-4 pr-10 py-2 border border-white/30 focus:outline-none focus:ring-2 focus:ring-white/50 appearance-none"
                       >

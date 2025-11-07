@@ -294,8 +294,8 @@ function PostCard({ post, index, onLike, onDelete, onPostClick }) {
 
         {post.image && (
           <ImageWithFallback
-            src={post.image}
-            alt="Post"
+            src={post.image || `/feed/feed${index + 1}.png`}
+            alt={post.content}
             className="w-full rounded-xl mb-3"
           />
         )}

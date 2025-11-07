@@ -367,8 +367,8 @@ function PollCard({ poll, index, onVote, onDelete, isSelected, onPollClick }) {
 
         <div className="space-y-2 mb-4">
           {poll.options.map((option, idx) => {
-            const percentage =
-              poll.totalVotes > 0 ? Math.round((option.votes / poll.totalVotes) * 100) : 0;
+            const total = poll.options.reduce((sum, o) => sum + o.votes, 0);
+            const percentage = total > 0 ? Math.round((option.votes / total) * 100) : 0;
             const isSelected = userVote === option.id;
             const isWinning = option.id === winningOption.id && poll.totalVotes > 0;
 

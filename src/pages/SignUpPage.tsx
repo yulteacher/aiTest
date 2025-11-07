@@ -15,14 +15,32 @@ export default function SignUpPage({ onSignup, navigateTo }) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isVerified, setIsVerified] = useState(false); // ✅ 중복확인 통과 여부
 
-    const handleImageUpload = (e) => {
-        const file = e.target.files[0];
+    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
         if (file) {
             const reader = new FileReader();
-            reader.onloadend = () => setProfileImage(reader.result);
+            reader.onloadend = () => {
+                const base64 = reader.result as string;
+
+                // ⚙️ 0.4배 품질로 압축 (캔버스 리사이즈)
+                const img = new Image();
+                img.src = base64;
+                img.onload = () => {
+                    const canvas = document.createElement("canvas");
+                    const ctx = canvas.getContext("2d")!;
+                    const width = img.width * 0.5;
+                    const height = img.height * 0.5;
+                    canvas.width = width;
+                    canvas.height = height;
+                    ctx.drawImage(img, 0, 0, width, height);
+                    const compressed = canvas.toDataURL("image/jpeg", 0.6);
+                    setProfileImage(compressed); // ← 압축된 이미지 저장
+                };
+            };
             reader.readAsDataURL(file);
         }
     };
+
 
     // ✅ 닉네임 중복확인 로직
     const handleCheckDuplicate = () => {

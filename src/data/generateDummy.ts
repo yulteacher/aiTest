@@ -43,7 +43,20 @@ export function generateDummyData() {
     const users: User[] = [];
     const posts: Post[] = [];
     const polls: Poll[] = [];
-
+    // ✅ admin 계정 추가
+    const admin = {
+        id: "u_admin",
+        username: "admin",
+        password: "123456",
+        teamId: nicknames[1],
+        avatar:
+            "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop",
+        xp: 1000,
+        level: 10,
+        badges: ["관리자", "초창기 멤버"],
+        joinedAt: new Date().toISOString(),
+    };
+    users.push(admin);
 
     KBO_TEAMS.forEach((team) => {
         const teamNicknames = nicknames[team.id as keyof typeof nicknames];

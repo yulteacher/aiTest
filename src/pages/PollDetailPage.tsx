@@ -1,24 +1,23 @@
-import { useState, useEffect } from 'react';
-import { motion, useMotionValue, useTransform, animate } from 'framer-motion';
-import { ArrowLeft, Check, Award, Edit2, Trash2, Save, X } from 'lucide-react';
-import { toast } from 'sonner';
-import TeamLogo from '../components/yului/TeamLogo';
-import TeamAvatar from '../components/yului/TeamAvatar';
+import { useState, useEffect } from "react";
+import { motion, useMotionValue, useTransform, animate } from "framer-motion";
+import { ArrowLeft, Check, Award, Edit2, Trash2 } from "lucide-react";
+import { toast } from "sonner";
+import TeamAvatar from "../components/yului/TeamAvatar";
+import { useAppDataContext } from "../context/AppDataContext";
+import { useXPSystem } from "../hooks/useXPSystem";
 
 /* ===============================
    🧮 AnimatedCount - 부드러운 카운트 + 색상 강조
 ================================ */
-function AnimatedCount({ value }) {
+function AnimatedCount({ value }: { value: number }) {
   const count = useMotionValue(0);
   const rounded = useTransform(count, (latest) => Math.round(latest));
-  const [color, setColor] = useState('#6b7280'); // 기본 회색
+  const [color, setColor] = useState("#6b7280");
 
   useEffect(() => {
-    const controls = animate(count, value, { duration: 0.6, ease: 'easeOut' });
-
-    // 값이 변할 때 색 잠깐 바뀌기
-    setColor(value > count.get() ? '#14b8a6' : '#ef4444'); // 증가=teal, 감소=red
-    const timeout = setTimeout(() => setColor('#6b7280'), 500);
+    const controls = animate(count, value, { duration: 0.6, ease: "easeOut" });
+    setColor(value > count.get() ? "#14b8a6" : "#ef4444");
+    const timeout = setTimeout(() => setColor("#6b7280"), 500);
 
     return () => {
       controls.stop();
@@ -27,115 +26,108 @@ function AnimatedCount({ value }) {
   }, [value]);
 
   return (
-    <motion.span
-      animate={{ color }}
-      transition={{ duration: 0.3, ease: 'easeInOut' }}
-      className="font-medium"
-    >
+    <motion.span animate={{ color }} transition={{ duration: 0.3 }} className="font-medium">
       {rounded}
     </motion.span>
   );
 }
+
+/* ===============================
+   🗳 PollDetailPage (전역데이터 기반)
+================================ */
 interface PollDetailPageProps {
   pollId: string | null;
   onBack: () => void;
   isDarkMode?: boolean;
-  onToggleDarkMode?: () => void;
 }
-export default function PollDetailPage({ pollId, onBack, isDarkMode, onToggleDarkMode }: PollDetailPageProps) {
-  const [poll, setPoll] = useState(null);
-  const [polls, setPolls] = useState([]);
+
+export default function PollDetailPage({ pollId, onBack, isDarkMode }: PollDetailPageProps) {
+  const { polls, setPolls, currentUser } = useAppDataContext();
+  const { addXP } = useXPSystem();
+  const [poll, setPoll] = useState<any>(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [editQuestion, setEditQuestion] = useState('');
-  const [editOptions, setEditOptions] = useState([]);
+  const [editQuestion, setEditQuestion] = useState("");
+  const [editOptions, setEditOptions] = useState<any[]>([]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
-    const savedPolls = localStorage.getItem('polls');
-    if (savedPolls) {
-      const parsed = JSON.parse(savedPolls);
-      setPolls(parsed);
-      const found = parsed.find(p => p.id === pollId);
+    const found = polls.find((p) => String(p.id) === String(pollId));
+    if (found) {
       setPoll(found);
-      if (found) {
-        setEditQuestion(found.question);
-        setEditOptions(found.options.map(o => ({ ...o })));
-      }
+      setEditQuestion(found.question);
+      setEditOptions(found.options.map((o: any) => ({ ...o })));
     }
-  }, [pollId]);
+  }, [pollId, polls]);
 
-  /* ✅ 투표/취소/변경 모두 가능하도록 개선 */
-  const handleVote = (optionId) => {
-    const currentUser = JSON.parse(localStorage.getItem("currentUser") || "null");
+  /* ✅ 투표 기능 */
+  const handleVote = (optionId: number) => {
     if (!currentUser) {
       toast.error("로그인 후 투표할 수 있습니다.");
       return;
     }
 
     const userId = currentUser.username;
-    const storedPolls = JSON.parse(localStorage.getItem("polls") || "[]");
-
-    const updatedPolls = storedPolls.map((p) => {
+    const updatedPolls = polls.map((p) => {
       if (p.id !== pollId) return p;
 
       const userVotes = p.userVotes || {};
       const previousVote = userVotes[userId] || null;
       let newOptions = [...p.options];
       let updatedUserVotes = { ...userVotes };
-      let totalVotes = p.totalVotes;
+      let totalVotes = p.totalVotes || 0;
 
       if (previousVote === optionId) {
-        // 🔹 같은 항목 클릭 → 투표 취소
-        newOptions = newOptions.map(opt =>
+        // 같은 항목 클릭 → 투표 취소
+        newOptions = newOptions.map((opt) =>
           opt.id === optionId ? { ...opt, votes: Math.max(0, opt.votes - 1) } : opt
         );
         delete updatedUserVotes[userId];
-        totalVotes = newOptions.reduce((sum, opt) => sum + opt.votes, 0);
+        totalVotes = newOptions.reduce((sum, o) => sum + o.votes, 0);
         toast.info("투표가 취소되었습니다.");
       } else {
-        // 🔹 새 항목 선택 or 변경
-        newOptions = newOptions.map(opt => {
+        // 새 항목 선택 or 변경
+        newOptions = newOptions.map((opt) => {
           if (opt.id === optionId) return { ...opt, votes: opt.votes + 1 };
           if (opt.id === previousVote) return { ...opt, votes: Math.max(0, opt.votes - 1) };
           return opt;
         });
         updatedUserVotes[userId] = optionId;
-        totalVotes = newOptions.reduce((sum, opt) => sum + opt.votes, 0);
+        totalVotes = newOptions.reduce((sum, o) => sum + o.votes, 0);
+
+        // XP 추가
+        addXP("pollVoted");
         toast.success(previousVote ? "투표가 변경되었습니다!" : "투표가 완료되었습니다!");
       }
 
       return { ...p, options: newOptions, userVotes: updatedUserVotes, totalVotes };
     });
 
-    localStorage.setItem("polls", JSON.stringify(updatedPolls));
-
-    const updatedPoll = JSON.parse(JSON.stringify(updatedPolls.find(p => p.id === pollId)));
+    setPolls(updatedPolls);
+    const updatedPoll = updatedPolls.find((p) => p.id === pollId);
     setPoll(updatedPoll);
-    setPolls([...updatedPolls]);
   };
 
+  /* ✅ 투표 수정 */
   const handleEdit = () => {
     if (!editQuestion.trim()) return toast.error("질문을 입력해주세요");
-    const validOptions = editOptions.filter(o => o.text.trim());
+    const validOptions = editOptions.filter((o) => o.text.trim());
     if (validOptions.length < 2) return toast.error("최소 2개의 선택지가 필요합니다");
 
-    const updatedPolls = polls.map(p =>
-      p.id === pollId
-        ? { ...p, question: editQuestion, options: validOptions, timestamp: "방금 전 (수정됨)" }
-        : p
+    const updatedPolls = polls.map((p) =>
+      p.id === pollId ? { ...p, question: editQuestion, options: validOptions, timestamp: "방금 전 (수정됨)" } : p
     );
 
     setPolls(updatedPolls);
-    localStorage.setItem("polls", JSON.stringify(updatedPolls));
-    setPoll(updatedPolls.find(p => p.id === pollId));
+    setPoll(updatedPolls.find((p) => p.id === pollId));
     setIsEditing(false);
     toast.success("투표가 수정되었습니다");
   };
 
+  /* ✅ 투표 삭제 */
   const handleDelete = () => {
     if (window.confirm("이 투표를 삭제하시겠습니까?")) {
-      const updated = polls.filter(p => p.id !== pollId);
-      localStorage.setItem("polls", JSON.stringify(updated));
+      const updated = polls.filter((p) => p.id !== pollId);
+      setPolls(updated);
       toast.success("투표가 삭제되었습니다");
       onBack();
     }
@@ -148,11 +140,7 @@ export default function PollDetailPage({ pollId, onBack, isDarkMode, onToggleDar
       </div>
     );
 
-  const winningOption = poll.options.reduce(
-    (max, opt) => (opt.votes > max.votes ? opt : max),
-    poll.options[0]
-  );
-  const currentUser = JSON.parse(localStorage.getItem("currentUser") || "null");
+  const winningOption = poll.options.reduce((max: any, opt: any) => (opt.votes > max.votes ? opt : max), poll.options[0]);
   const userId = currentUser?.username;
   const userVote = poll.userVotes?.[userId];
 
@@ -196,11 +184,8 @@ export default function PollDetailPage({ pollId, onBack, isDarkMode, onToggleDar
 
           {/* 선택지 */}
           <div className="space-y-3 mb-6">
-            {poll.options.map((option) => {
-              const percentage =
-                poll.totalVotes > 0
-                  ? Math.round((option.votes / poll.totalVotes) * 100)
-                  : 0;
+            {poll.options.map((option: any) => {
+              const percentage = poll.totalVotes > 0 ? Math.round((option.votes / poll.totalVotes) * 100) : 0;
               const isWinning = option.id === winningOption.id && poll.totalVotes > 0;
               const isVoted = userVote === option.id;
 
@@ -210,8 +195,8 @@ export default function PollDetailPage({ pollId, onBack, isDarkMode, onToggleDar
                   whileTap={{ scale: 0.98 }}
                   onClick={() => handleVote(option.id)}
                   className={`w-full relative overflow-hidden rounded-xl p-4 transition-all ${isVoted
-                    ? "ring-2 ring-slate-500 bg-slate-50 dark:bg-slate-900/50"
-                    : "bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600"
+                      ? "ring-2 ring-slate-500 bg-slate-50 dark:bg-slate-900/50"
+                      : "bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600"
                     }`}
                 >
                   <motion.div
@@ -224,22 +209,16 @@ export default function PollDetailPage({ pollId, onBack, isDarkMode, onToggleDar
                   <div className="relative flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div
-                        className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${isVoted
-                          ? "border-slate-500 bg-slate-500"
-                          : "border-gray-300 dark:border-gray-500"
+                        className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${isVoted ? "border-slate-500 bg-slate-500" : "border-gray-300 dark:border-gray-500"
                           }`}
                       >
                         {isVoted && <Check className="w-4 h-4 text-white" />}
                       </div>
-                      <span className="text-gray-900 dark:text-gray-100 font-medium">
-                        {option.text}
-                      </span>
+                      <span className="text-gray-900 dark:text-gray-100 font-medium">{option.text}</span>
                       {isWinning && <Award className="w-5 h-5 text-yellow-500" />}
                     </div>
                     <div className="flex items-center gap-3">
-                      <span className="text-sm text-gray-600 dark:text-gray-400">
-                        {option.votes}표
-                      </span>
+                      <span className="text-sm text-gray-600 dark:text-gray-400">{option.votes}표</span>
                       <span className="text-sm font-medium text-gray-900 dark:text-gray-100 min-w-[3rem] text-right">
                         {percentage}%
                       </span>
@@ -250,7 +229,7 @@ export default function PollDetailPage({ pollId, onBack, isDarkMode, onToggleDar
             })}
           </div>
 
-          {/* ✅ 총 투표 수 애니메이션 */}
+          {/* 총 투표 수 */}
           <div className="text-center pt-4 border-t border-gray-100 dark:border-gray-700">
             <p className="text-sm text-gray-600 dark:text-gray-400">
               총 <AnimatedCount value={poll.totalVotes ?? 0} />명 참여
