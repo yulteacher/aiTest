@@ -6,20 +6,27 @@ import { toast } from 'sonner';
 import TeamLogo from '../components/yului/TeamLogo';
 import TeamAvatar from '../components/yului/TeamAvatar';
 import { useXPSystem } from "../hooks/useXPSystem";
-import { useLocalData } from "../hooks/useLocalData";
-import type { Post, Poll } from '../types/interfaces'
+import { useAppDataContext } from "../context/AppDataContext";
+import type { Post, Poll, User } from '../types/interfaces'
 
-
-export default function MyPage({ user, onLogout, onUpdateUser, onNavigate }) {
+interface MyPageProps {
+  user: User;
+  onLogout: () => void;
+  onNavigate: (path: string) => void;
+  onUpdateUser?: (user: User) => void; // ✅ 선택적 (optional)
+}
+export default function MyPage({ user, onLogout, onNavigate, onUpdateUser }: MyPageProps) {
   const [notifications, setNotifications] = useState([]);
   const [activeSection, setActiveSection] = useState('profile');
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [editedUser, setEditedUser] = useState({ ...user });
   const [newProfileImage, setNewProfileImage] = useState(null);
-  const { currentUser, setCurrentUser } = useLocalData(); // ✅ userData 제거
-  const { getLevelInfo } = useXPSystem(currentUser, setCurrentUser);
-
+  const { currentUser, setCurrentUser } = useAppDataContext();
+  const { getLevelInfo } = useXPSystem();
   const { level, xp, progress, toNext } = getLevelInfo();
+  const team = KBO_TEAMS.find(
+    (t) => t.id === (editedUser?.teamId || currentUser?.teamId || user?.teamId)
+  );
 
   useEffect(() => {
     const savedNotifications = localStorage.getItem('notifications');
@@ -140,34 +147,36 @@ export default function MyPage({ user, onLogout, onUpdateUser, onNavigate }) {
 
 
   const handleSaveProfile = () => {
-    // 로컬스토리지의 사용자 정보 업데이트
     const users = JSON.parse(localStorage.getItem('users') || '[]');
     const updatedUsers = users.map(u => {
-      if (u.username === user.username) {
-        if (editedUser.avatar) {
-          // ✅ avatarKey에만 새 이미지 저장
-          localStorage.setItem(u.avatarKey, editedUser.avatar);
-        }
-        return { ...u, team: editedUser.team, bio: editedUser.bio };
+      if (u.id === user.id) {
+        return {
+          ...u,
+          teamId: editedUser.teamId,
+          bio: editedUser.bio,
+          avatar: editedUser.avatar || u.avatar
+        };
       }
       return u;
     });
     localStorage.setItem('users', JSON.stringify(updatedUsers));
+    const selectedTeam = KBO_TEAMS.find(t => t.id === editedUser.teamId);
     const updatedCurrentUser = {
       ...user,
-      team: editedUser.team,
+      teamId: editedUser.teamId,
+      team: selectedTeam, // ✅ 팀 객체 동기화
       bio: editedUser.bio,
+      avatar: editedUser.avatar || user.avatar
     };
-    if (onUpdateUser) onUpdateUser({
-      ...updatedCurrentUser,
-      avatar: editedUser.avatar || localStorage.getItem(user.avatarKey)
-    });
 
+    // ✅ Context 갱신
+    setCurrentUser(updatedCurrentUser);
+    localStorage.setItem('currentUser', JSON.stringify(updatedCurrentUser));
 
     setIsEditingProfile(false);
-    setNewProfileImage(null);
     toast.success('프로필이 업데이트되었습니다!');
   };
+
 
   const unreadCount = notifications.filter(n => !n.read).length;
   return (
@@ -246,38 +255,37 @@ export default function MyPage({ user, onLogout, onUpdateUser, onNavigate }) {
                 ) : (
 
                   <TeamAvatar
-                    team={user?.team?.name}
+                    team={team?.name}
                     src={user?.avatar}
                     size="xl"
-                    className="border-4 border-white mb-4 "
+                    className="border-4 border-white mb-4"
                   />
                 )}
-
+                {/* 팀 로고 출력 */}
+                {team && (
+                  <div className="mt-3 bg-white/20 backdrop-blur-sm rounded-full px-4 py-2 flex items-center gap-2">
+                    <TeamLogo team={team.id} size="md" />
+                    <span className="text-white">{team.name}</span>
+                  </div>
+                )}
                 <h2 className="text-white mb-1 mt-4">{user?.username || '사용자'}</h2>
                 <p className="text-white/80">@{user?.username || 'username'}</p>
 
                 {isEditingProfile ? (
                   <div className="mt-3 w-full max-w-xs border-t border-white/20 py-3">
-                    {/* ✅ 선택된 팀 미리보기 (Poll UI 스타일 그대로) */}
-                    {editedUser?.team && (
-                      <div className="flex items-center justify-center gap-3 mt-4 mb-10">
-                        <TeamLogo team={editedUser.team} size="xl" />
-                      </div>
-                    )}
                     <label className="block text-white/80 text-sm mb-2">응원 구단</label>
                     <div className="relative">
                       <select
-                        value={editedUser?.team?.id || ''}
-                        onChange={(e) => {
-                          setEditedUser(prev => ({
+                        value={editedUser?.teamId || ''}
+                        onChange={(e) =>
+                          setEditedUser((prev) => ({
                             ...prev,
-                            team: e.target.value, // ✅ 객체 대신 id 문자열만 저장
-                            avatar: prev.avatar,
-                          }));
-                        }}
+                            teamId: e.target.value, // ✅ teamId 문자열로 저장
+                          }))
+                        }
                         className="w-full bg-white/20 text-white rounded-xl pl-4 pr-10 py-2 border border-white/30 focus:outline-none focus:ring-2 focus:ring-white/50 appearance-none"
                       >
-                        {KBO_TEAMS.map(team => (
+                        {KBO_TEAMS.map((team) => (
                           <option key={team.id} value={team.id} className="text-gray-900">
                             {team.name}
                           </option>
@@ -286,13 +294,9 @@ export default function MyPage({ user, onLogout, onUpdateUser, onNavigate }) {
                       <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/70 pointer-events-none" />
                     </div>
                   </div>
-                ) : user?.team && (
-                  <div className="mt-3 bg-white/20 backdrop-blur-sm rounded-full px-4 py-2 flex items-center gap-2">
-                    <TeamLogo team={user.team} size="md" />
-                    <span className="text-white">{user.team.name}</span>
-                  </div>
-
-                )}
+                ) :
+                  null
+                }
 
                 {isEditingProfile ? (
                   <div className="mt-3 w-full max-w-xs border-t border-white/20 pt-3 py-3">
@@ -378,8 +382,7 @@ export default function MyPage({ user, onLogout, onUpdateUser, onNavigate }) {
               {/* ✅ 내 구단 투표 보기 */}
               <button
                 onClick={() => {
-                  // ✅ 구단 정보 localStorage에 임시 저장
-                  localStorage.setItem("selectedTeamForPolls", JSON.stringify(user.team));
+                  localStorage.setItem("selectedTeamForPolls", JSON.stringify(team));
                   onNavigate("polls");
                 }}
                 className="w-full flex items-center gap-3 px-4 py-3 hover:bg-teal-50 dark:hover:bg-[#00d5be]/10 transition-all border-b border-gray-100 dark:border-gray-700/50"

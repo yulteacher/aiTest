@@ -1,7 +1,10 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { LogIn, Sparkles, UserPlus } from 'lucide-react';
-import { KBO_TEAMS } from '../data/constants/teams';
+import { LogIn, Sparkles } from 'lucide-react';
+import { toast } from 'sonner';
+import AnimatedButton from '../components/yului/AnimatedButton';
+import Iridescence from '../components/reactbits/Iridescence';
+
 
 export default function LoginPage({ onLogin, navigateTo }) {
   const [username, setUsername] = useState('');
@@ -10,17 +13,42 @@ export default function LoginPage({ onLogin, navigateTo }) {
 
   const handleLogin = () => {
     setError('');
-    const success = onLogin(username, password); // ✅ useAuth의 login 함수 호출
-    if (success) {
-      navigateTo('home'); // ✅ 성공하면 홈으로 이동
-    } else {
-      setError('아이디 또는 비밀번호가 올바르지 않습니다.');
-    }
-  };
 
+    if (!username || !password) {
+      toast.error("아이디와 비밀번호를 입력해주세요 ⚠️");
+      return;
+    }
+
+    const users = JSON.parse(localStorage.getItem("users") || "[]");
+    const foundUser = users.find(
+      (u) =>
+        u.username.trim().toLowerCase() === username.trim().toLowerCase() &&
+        u.password === password
+    );
+
+    if (!foundUser) {
+      setError('아이디 또는 비밀번호가 올바르지 않습니다.');
+      toast.error("로그인 실패 ❌");
+      return;
+    }
+
+    localStorage.setItem("currentUser", JSON.stringify(foundUser));
+    toast.success(`${foundUser.username}님, 환영합니다 🎉`);
+    onLogin(foundUser);
+    navigateTo("home");
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-teal-600 via-cyan-500 to-sky-600 flex items-center justify-center p-4">
+      {/* 배경 애니메이션 */}
+      <div className="absolute inset-0 overflow-hidden">
+        <Iridescence
+          color={[0.3, 0.7, 0.9]}
+          mouseReact={true}
+          amplitude={0.05}
+          speed={1.0}
+        />
+      </div>
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -48,20 +76,16 @@ export default function LoginPage({ onLogin, navigateTo }) {
           </div>
         )}
 
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={handleLogin}  // ✅ 여기가 핵심!
-          className="w-full bg-white text-teal-700 py-3 rounded-xl flex items-center justify-center gap-2"
-        >
-          <LogIn className="w-5 h-5" />
-          로그인
-        </motion.button>
+        <AnimatedButton
+          label="로그인"
+          icon={LogIn}
+          onClick={handleLogin}
+        />
 
         <p className="text-center mt-6 text-white/80">
-          계정이 없으신가요?{' '}
+          계정이 없으신가요?{" "}
           <span
-            onClick={() => navigateTo('signup')}
+            onClick={() => navigateTo("signup")}
             className="text-white font-semibold cursor-pointer hover:underline"
           >
             회원가입
@@ -71,16 +95,22 @@ export default function LoginPage({ onLogin, navigateTo }) {
         <motion.button
           type="button"
           onClick={() => {
-            setUsername('admin');
-            setPassword('123456');
+            setUsername("admin");
+            setPassword("123456");
           }}
-          whileHover={{ scale: 1.03 }}
-          className="w-full bg-white/10 mt-6 p-4 rounded-xl text-center text-white/80 hover:bg-white/20"
+          whileHover={{ scale: 1.003 }}
+          className="w-full bg-white/10 mt-6 p-4 rounded-xl text-center text-white/60 cursor-pointer border border-white/20"
         >
-          <Sparkles className="inline-block w-4 h-4 mr-2" />
-          기본 계정으로 체험하기
+          <div className="text-white/60 text-center mb-3">
+            <Sparkles className="w-4 h-4 inline mr-2" />
+            기본 계정으로 체험하기
+          </div>
+          <div className="bg-white/10 rounded-xl p-3 text-center hover:bg-white/20">
+            <p className="text-white">ID: admin</p>
+            <p className="text-white">PW: 123456</p>
+          </div>
         </motion.button>
       </motion.div>
-    </div>
+    </div >
   );
 }

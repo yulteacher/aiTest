@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { Sparkles, Heart, TrendingUp, MessageCircle } from 'lucide-react';
+import Iridescence from '../components/reactbits/Iridescence';
 
 export default function IntroPage({ onEnter }) {
   const features = [
@@ -12,30 +13,16 @@ export default function IntroPage({ onEnter }) {
     <div className="min-h-screen bg-gradient-to-br from-teal-600 via-cyan-500 to-sky-600 flex items-center justify-center p-4 overflow-hidden">
       {/* 배경 애니메이션 */}
       <div className="absolute inset-0 overflow-hidden">
-        {[...Array(20)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute w-2 h-2 bg-white rounded-full"
-            initial={{
-              x: Math.random() * window.innerWidth,
-              y: -20,
-              opacity: 0.3,
-            }}
-            animate={{
-              y: window.innerHeight + 20,
-              opacity: [0.3, 1, 0.3],
-            }}
-            transition={{
-              duration: 3 + Math.random() * 2,
-              repeat: Infinity,
-              delay: Math.random() * 5,
-            }}
-          />
-        ))}
+        <Iridescence
+          color={[0.3, 0.7, 0.9]}
+          mouseReact={true}
+          amplitude={0.05}
+          speed={1.0}
+        />
       </div>
 
       <div className="relative z-10 max-w-lg w-full">
-        {/* ���고 */}
+        {/* 고 */}
         <motion.div
           initial={{ scale: 0, rotate: -180 }}
           animate={{ scale: 1, rotate: 0 }}
@@ -43,11 +30,11 @@ export default function IntroPage({ onEnter }) {
           className="text-center mb-12"
         >
           <motion.div
-            animate={{ 
+            animate={{
               rotate: [0, 10, -10, 0],
               scale: [1, 1.1, 1]
             }}
-            transition={{ 
+            transition={{
               duration: 2,
               repeat: Infinity,
               repeatDelay: 1
@@ -73,7 +60,7 @@ export default function IntroPage({ onEnter }) {
                 className="bg-white/10 backdrop-blur-lg rounded-2xl p-4 text-center"
               >
                 <motion.div
-                  animate={{ 
+                  animate={{
                     y: [0, -10, 0],
                   }}
                   transition={{
@@ -95,10 +82,9 @@ export default function IntroPage({ onEnter }) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.8 }}
-          whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={onEnter}
-          className="w-full bg-white text-teal-700 py-4 rounded-full shadow-2xl relative overflow-hidden group"
+          className="w-full bg-white text-teal-700 py-4 rounded-full shadow-2xl relative overflow-hidden group  border border-white/30 cursor-pointer"
         >
           <motion.div
             className="absolute inset-0 bg-gradient-to-r from-teal-400/20 to-cyan-400/20"

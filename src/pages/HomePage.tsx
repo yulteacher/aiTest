@@ -15,37 +15,49 @@ interface HomePageProps {
 }
 
 export default function HomePage({ user, onNavigate, onPostClick, onPollClick, onChatOpen }: HomePageProps) {
+  if (!user || !user.team) return null;
   const [posts, setPosts] = useState([]);
   const [polls, setPolls] = useState([]);
 
   useEffect(() => {
-    const savedPolls = localStorage.getItem('polls');
-    if (!savedPolls) {
-      localStorage.setItem('polls', JSON.stringify(dummyPollsData));
-    }
+    // ✅ 더미데이터 없으면 초기 세팅
+    const savedPolls = localStorage.getItem("polls");
+    if (!savedPolls) localStorage.setItem("polls", JSON.stringify(dummyPollsData));
 
-    const savedPosts = localStorage.getItem('posts');
-    const pollsData = JSON.parse(localStorage.getItem('polls') || "[]");
+    // ✅ posts, polls, users 모두 불러오기
+    const postsData = JSON.parse(localStorage.getItem("posts") || "[]");
+    const pollsData = JSON.parse(localStorage.getItem("polls") || "[]");
+    const users = JSON.parse(localStorage.getItem("users") || "[]");
 
-    if (savedPosts) {
-      const postsData = JSON.parse(savedPosts);
-      // ✅ posts에 authorId → username, avatar 보정
-      const users = JSON.parse(localStorage.getItem('users') || "[]");
-      const enriched = postsData.map((p: any) => {
-        const author = users.find((u: any) => u.id === p.authorId);
-        return {
-          ...p,
-          author: author ? author.username : "익명",
-          avatar: author ? author.avatar : "https://placekitten.com/100/100",
-          likes: p.likes?.length || 0,
-          comments: p.comments?.length || 0,
-        };
-      });
-      setPosts(enriched);
-    }
+    // ✅ author/avatar 보정 + 랜덤 섞기
+    const enrichedPosts = postsData.map((p: any) => {
+      const author = users.find((u: any) => u.id === p.authorId);
+      return {
+        ...p,
+        authorName: author?.username || p.authorName || "익명",
+        avatar: author?.avatar || p.avatar || "https://placekitten.com/100/100",
+        likes: Array.isArray(p.likes) ? p.likes.length : p.likes || 0,
+        comments: Array.isArray(p.comments) ? p.comments.length : p.comments || 0,
+      };
+    });
 
-    if (pollsData) setPolls(pollsData);
+    const enrichedPolls = pollsData.map((poll: any) => {
+      const author = users.find((u: any) => u.id === poll.createdBy);
+      return {
+        ...poll,
+        author: author?.username || poll.author || "익명",
+        avatar: author?.avatar || poll.avatar || "https://placekitten.com/100/100",
+      };
+    });
+
+    // ✅ 랜덤 섞기 후 최근 데이터 일부만 보여주기
+    const shuffledPosts = [...enrichedPosts].sort(() => 0.5 - Math.random());
+    const shuffledPolls = [...enrichedPolls].sort(() => 0.5 - Math.random());
+
+    setPosts(shuffledPosts.slice(0, 5));
+    setPolls(shuffledPolls.slice(0, 3));
   }, []);
+
 
 
   const stats = useMemo(() => [
@@ -252,13 +264,13 @@ export default function HomePage({ user, onNavigate, onPostClick, onPollClick, o
                 >
                   <div className="flex items-start gap-3">
                     <img
-                      src={post.avatar}
-                      alt={post.author}
+                      src={post.avatar || "/images/default_avatar.png"}
+                      alt={post.authorName}
                       className="w-10 h-10 rounded-full ring-2 ring-teal-200 dark:ring-teal-400/30"
                     />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="font-medium text-gray-900 dark:text-gray-100">{post.author}</span>
+                        <span className="font-medium text-gray-900 dark:text-gray-100"> {post.authorName || "익명"}</span>
                         <span className="text-gray-400 dark:text-gray-500">·</span>
                         <span className="text-xs text-gray-500 dark:text-gray-400">{post.timestamp}</span>
                       </div>

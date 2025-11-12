@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import TeamLogo from '../components/yului/TeamLogo';
 import TeamAvatar from '../components/yului/TeamAvatar';
 import { ImageWithFallback } from '../components/figma/ImageWithFallback';
+import { useAppDataContext } from "../context/AppDataContext";
 
 interface PostDetailPageProps {
   postId: string | null;
@@ -51,35 +52,41 @@ export default function PostDetailPage({ postId, onBack, isDarkMode, onToggleDar
     setPost(updatedPost);
   };
 
+  const { currentUser } = useAppDataContext(); // ✅ 현재 로그인 유저 불러오기
+
   const handleAddComment = () => {
     if (!newComment.trim()) return;
 
-    const comment = {
+    const newCommentObj = {
       id: Date.now().toString(),
-      author: '나',
-      avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop',
+      authorId: currentUser?.id || null,
+      author: currentUser?.username || "익명",
+      avatar:
+        currentUser?.avatar ||
+        "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop",
       content: newComment,
-      timestamp: '방금 전'
+      timestamp: "방금 전",
     };
 
-    const updatedPosts = posts.map(p => {
-      if (p.id === postId) {
-        return {
+    const updatedPosts = posts.map((p) =>
+      p.id === postId
+        ? {
           ...p,
-          commentsList: [...(p.commentsList || []), comment],
-          comments: (p.comments || 0) + 1
-        };
-      }
-      return p;
-    });
+          commentsList: [...(p.commentsList || []), newCommentObj],
+          comments: (p.comments || 0) + 1,
+        }
+        : p
+    );
 
     setPosts(updatedPosts);
-    localStorage.setItem('posts', JSON.stringify(updatedPosts));
-    const updatedPost = updatedPosts.find(p => p.id === postId);
+    localStorage.setItem("posts", JSON.stringify(updatedPosts));
+
+    const updatedPost = updatedPosts.find((p) => p.id === postId);
     setPost(updatedPost);
-    setNewComment('');
-    toast.success('댓글이 작성되었습니다');
+    setNewComment("");
+    toast.success("댓글이 작성되었습니다!");
   };
+
 
   const handleDeleteComment = (commentId) => {
     if (window.confirm('이 댓글을 삭제하시겠습니까?')) {

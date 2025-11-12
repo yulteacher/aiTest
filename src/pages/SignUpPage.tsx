@@ -4,7 +4,7 @@ import { UserPlus, Camera, CheckCircle2, Search } from "lucide-react";
 import { KBO_TEAMS } from "../data/constants/teams";
 import { toast } from "sonner";
 import TeamLogo from '../components/yului/TeamLogo';
-
+import AnimatedButton from '../components/yului/AnimatedButton';
 export default function SignUpPage({ onSignup, navigateTo }) {
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
@@ -42,10 +42,10 @@ export default function SignUpPage({ onSignup, navigateTo }) {
     };
 
 
-    // ✅ 닉네임 중복확인 로직
     const handleCheckDuplicate = () => {
         const trimmedName = username.trim();
         if (!trimmedName) {
+            setError("아이디를 입력해주세요.");
             toast.error("아이디를 입력해주세요 ⚠️");
             return;
         }
@@ -56,13 +56,17 @@ export default function SignUpPage({ onSignup, navigateTo }) {
         );
 
         if (isDuplicate) {
+            setError("이미 사용 중인 닉네임입니다 ❌");
             toast.error("이미 사용 중인 닉네임입니다 ❌");
             setIsVerified(false);
         } else {
+            setError("");
             toast.success("사용 가능한 닉네임입니다 ✅");
             setIsVerified(true);
         }
     };
+
+
 
     const handleSignup = () => {
         setError("");
@@ -87,28 +91,39 @@ export default function SignUpPage({ onSignup, navigateTo }) {
             return;
         }
 
+        // ✅ 1️⃣ team 객체를 보장
+        const teamInfo = KBO_TEAMS.find(t => t.id === selectedTeam.id);
+
         const newUser = {
             id: `u_${selectedTeam.id}_${Date.now()}`,
             username: username.trim(),
             password,
+            teamId: selectedTeam.id,
+            team: teamInfo,  // ✅ 반드시 실제 team 객체를 저장
             avatar:
                 profileImage ||
                 `https://api.dicebear.com/7.x/avataaars/svg?seed=${username}`,
-            team: selectedTeam,
             xp: 0,
             level: 1,
             badges: [],
             joinedAt: new Date().toISOString(),
+            bio: `${selectedTeam.name} 팬이에요! ⚾`,
         };
 
+        // ✅ 2️⃣ localStorage 저장
         const users = JSON.parse(localStorage.getItem("users") || "[]");
         const updatedUsers = [...users, newUser];
         localStorage.setItem("users", JSON.stringify(updatedUsers));
         localStorage.setItem("currentUser", JSON.stringify(newUser));
 
+        // ✅ 3️⃣ 상태 업데이트 (App으로 user 전달)
         toast.success(`${newUser.username}님, 가입을 환영합니다 🎉`);
         onSignup(newUser);
 
+        // ✅ 바로 홈으로 이동
+        navigateTo("home");
+
+        // ✅ 4️⃣ 초기화
         setUsername("");
         setPassword("");
         setConfirmPassword("");
@@ -116,6 +131,7 @@ export default function SignUpPage({ onSignup, navigateTo }) {
         setProfileImage(null);
         setIsVerified(false);
     };
+
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-teal-600 via-cyan-500 to-sky-600 flex items-center justify-center p-4">
@@ -146,12 +162,18 @@ export default function SignUpPage({ onSignup, navigateTo }) {
                     </button>
                 </div>
 
+                {/* ✅ 중복확인 결과 메시지 */}
+                {error && !isVerified && (
+                    <div className="flex items-center gap-2 text-red-400 text-sm mb-3">
+                        ❌ {error}
+                    </div>
+                )}
+
                 {isVerified && (
                     <div className="flex items-center gap-2 text-green-400 text-sm mb-3">
                         <CheckCircle2 className="w-4 h-4" /> 중복 확인 완료!
                     </div>
                 )}
-
                 <input
                     type="password"
                     value={password}
@@ -232,16 +254,12 @@ export default function SignUpPage({ onSignup, navigateTo }) {
                     </div>
                 )}
 
-                <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+                <AnimatedButton
+                    label="회원가입"
+                    icon={UserPlus}
                     onClick={handleSignup}
                     disabled={isSubmitting}
-                    className="w-full bg-white text-teal-700 py-3 rounded-xl flex items-center justify-center gap-2 disabled:opacity-50"
-                >
-                    <UserPlus className="w-5 h-5" />
-                    회원가입
-                </motion.button>
+                />
 
                 <p className="text-center mt-6 text-white/80">
                     이미 계정이 있으신가요?{" "}

@@ -1,12 +1,12 @@
 import { motion } from "framer-motion";
+import { KBO_TEAMS } from "../../data/constants/teams";
 
 interface TeamLogoProps {
-  team?: any; // 기존 그대로 (객체 or string 가능)
-  teamId?: string; // ✅ 추가
+  team?: any; // 객체 또는 문자열 모두 가능
   size?: "xs" | "sm" | "md" | "lg" | "xl";
 }
 
-export default function TeamLogo({ team, teamId, size = "md" }: TeamLogoProps) {
+export default function TeamLogo({ team, size = "md" }: TeamLogoProps) {
   const sizeClasses = {
     xs: "w-4 h-4",
     sm: "w-8 h-8 text-xs",
@@ -48,10 +48,13 @@ export default function TeamLogo({ team, teamId, size = "md" }: TeamLogoProps) {
     nc: "/assets/nc.png",
   };
 
-  // ✅ teamId 우선 → team.id → string 형태 자동 인식
-  const id = team?.id || team?.teamId || team || teamId || "doosan";
+  // ✅ team이 객체일 수도 있고 문자열일 수도 있으므로 안전하게 처리
+  const id =
+    typeof team === "string"
+      ? team
+      : team?.id || "doosan";
 
-  const data = TEAM_DATA[id] || TEAM_DATA["lg"];
+  const data = TEAM_DATA[id] || TEAM_DATA["doosan"];
   const logoImage = LOGOS[id];
 
   return (

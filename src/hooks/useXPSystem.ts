@@ -1,52 +1,32 @@
-// src/hooks/useXPSystem.ts
-import { toast } from "sonner";
-import { useAppData } from "./useAppData";
+import { useAppDataContext } from "../context/AppDataContext";
 
 export const useXPSystem = () => {
-  const { currentUser, setCurrentUser, users, setUsers } = useAppData();
-
-  const XP_RULES = {
-    postCreate: 10,
-    likeReceived: 2,
-    commentReceived: 3,
-    pollVoted: 5,
-  };
-
-  const calculateLevel = (xp) => Math.floor(xp / 100) + 1;
-  const calculateProgress = (xp) => xp % 100;
-
-  const addXP = (type) => {
-    if (!currentUser || !XP_RULES[type]) return;
-
-    const xpGain = XP_RULES[type];
-    const newXP = (currentUser.xp || 0) + xpGain;
-    const prevLevel = calculateLevel(currentUser.xp || 0);
-    const newLevel = calculateLevel(newXP);
-
-    const updatedUser = { ...currentUser, xp: newXP, level: newLevel };
-    setCurrentUser(updatedUser);
-
-    const newUsers = users.map(u => u.username === currentUser.username ? updatedUser : u);
-    setUsers(newUsers);
-
-    if (newLevel > prevLevel) {
-      toast.success(`🎉 레벨 업! ${prevLevel} → ${newLevel}`);
-    } else {
-      toast.message(`+${xpGain} XP`, {
-        description: `${calculateProgress(newXP)} / 100 XP`,
-      });
-    }
-  };
+  const { currentUser, setCurrentUser } = useAppDataContext();
 
   const getLevelInfo = () => {
-    const xp = currentUser?.xp || 0;
-    return {
-      xp,
-      level: calculateLevel(xp),
-      progress: calculateProgress(xp),
-      toNext: 100 - calculateProgress(xp),
-    };
+    if (!currentUser) return { level: 1, xp: 0, progress: 0, toNext: 100 };
+
+    const xp = currentUser.xp || 0;
+    const level = Math.floor(xp / 100) + 1;
+    const progress = xp % 100;
+    const toNext = 100 - progress;
+
+    return { level, xp, progress, toNext };
   };
 
-  return { addXP, getLevelInfo };
+  const addXP = (amount: number) => {
+    if (!currentUser) return;
+
+    const updatedUser = { ...currentUser, xp: currentUser.xp + amount };
+    setCurrentUser(updatedUser);
+    localStorage.setItem("currentUser", JSON.stringify(updatedUser));
+
+    const users = JSON.parse(localStorage.getItem("users") || "[]");
+    const updatedUsers = users.map((u: any) =>
+      u.id === updatedUser.id ? updatedUser : u
+    );
+    localStorage.setItem("users", JSON.stringify(updatedUsers));
+  };
+
+  return { getLevelInfo, addXP };
 };
