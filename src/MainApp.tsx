@@ -2,9 +2,8 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Moon, Sun, MessageCircle, X, ArrowLeft } from "lucide-react";
-import { useAppDataContext } from "./context/AppDataContext";
+
 import { useXPSystem } from "./hooks/useXPSystem";
-import { initLocalData } from "./data/initLocalData";
 import Navigation from "./components/yului/Navigation";
 import LiquidEther from "./components/reactbits/LiquidEther";
 import { Toaster } from "react-hot-toast";
@@ -19,12 +18,34 @@ import MyPage from "./pages/MyPage";
 import PostDetailPage from "./pages/PostDetailPage";
 import PollDetailPage from "./pages/PollDetailPage";
 import ChatPage from "./pages/ChatPage";
+import TestGrid from "./pages/WidgetGridTest";
+
+import { useAppDataContext } from "./context/AppDataContext";
 
 export default function MainApp() {
-    const { currentUser, setCurrentUser } = useAppDataContext();
+    const {
+        currentUser,
+        setCurrentUser,
+        users,
+        posts,
+        polls,
+        addPost,
+        updatePost,
+        deletePost,
+        addComment,
+        updateComment,
+        deleteComment,
+        addPoll,
+        updatePoll,
+        deletePoll,
+    } = useAppDataContext();
     const { addXP } = useXPSystem();
-    const [showIntro, setShowIntro] = useState(true);
-    const [activeTab, setActiveTab] = useState("home");
+    const [showIntro, setShowIntro] = useState(
+        localStorage.getItem("introSeen") !== "true"
+    );
+    const [activeTab, setActiveTab] = useState(
+        localStorage.getItem("activeTab") || "home"
+    );
     const [darkMode, setDarkMode] = useState(false);
     const [showChat, setShowChat] = useState(false);
     const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
@@ -97,10 +118,15 @@ export default function MainApp() {
         setSelectedPostId(null);
         setSelectedPollId(null);
         setActiveTab(path);
+        // ⭐ 여기가 없어서 계속 home으로 돌아간 것
+        localStorage.setItem("activeTab", path);
         window.history.pushState({ path }, '', `#${path}`);
     };
 
-    if (showIntro) return <IntroPage onEnter={() => setShowIntro(false)} />;
+    if (showIntro) return <IntroPage onEnter={() => {
+        localStorage.setItem("introSeen", "true");
+        setShowIntro(false)
+    }} />;
 
     if (!currentUser) {
         const hash = window.location.hash.replace('#', '');
@@ -141,6 +167,8 @@ export default function MainApp() {
                 }} />;
             case 'mypage':
                 return <MyPage user={currentUser} onLogout={() => setCurrentUser(null)} onNavigate={setActiveTab} />;
+            case 'test':
+                return <TestGrid />;
             default:
                 return null;
         }

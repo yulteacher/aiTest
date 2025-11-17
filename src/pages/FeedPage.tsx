@@ -2,16 +2,23 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Image as ImageIcon } from "lucide-react";
-import { ImageWithFallback } from "../components/figma/ImageWithFallback";
-import Confetti from "../components/Confetti";
-import TeamSelector from "../components/TeamSelector";
 import { toast } from "sonner";
-import { useAppDataContext } from "../context/AppDataContext";
-import { Post } from "../types/interfaces";
+
+import TeamSelector from "../components/TeamSelector";
+import Confetti from "../components/Confetti";
 import FeedPost from "../components/FeedPost";
 
+import { useAppDataContext } from "../context/AppDataContext";
+import { Post } from "../types/interfaces";
+
 export default function FeedPage({ onPostClick }) {
-  const { currentUser, posts, setPosts } = useAppDataContext();
+  const {
+    currentUser,
+    posts,
+    addPost,
+    updatePost,
+    deletePost,
+  } = useAppDataContext();
 
   const [newPost, setNewPost] = useState("");
   const [newImage, setNewImage] = useState<string | null>(null);
@@ -20,29 +27,11 @@ export default function FeedPage({ onPostClick }) {
   const [selectedTeam, setSelectedTeam] = useState<any>(null);
   const [newPostTeam, setNewPostTeam] = useState<any>(null);
   const [editingPost, setEditingPost] = useState<Post | null>(null);
-  /* ❤️ 좋아요 */
-  const handleLike = (postId: string) => {
-    const updated = posts.map((post) => {
-      if (post.id === postId) {
-        const isLiked = !post.liked;
-        if (isLiked) {
-          setShowConfetti(true);
-          setTimeout(() => setShowConfetti(false), 1500);
-        }
-        return { ...post, liked: isLiked, likes: isLiked ? post.likes + 1 : post.likes - 1 };
-      }
-      return post;
-    });
-    setPosts(updated);
-    localStorage.setItem("posts", JSON.stringify(updated));
-  };
 
   /* 🗑 삭제 */
   const handleDelete = (postId: string) => {
     if (!window.confirm("이 게시글을 삭제하시겠습니까?")) return;
-    const updated = posts.filter((p) => p.id !== postId);
-    setPosts(updated);
-    localStorage.setItem("posts", JSON.stringify(updated));
+    deletePost(postId);
     toast.success("게시글이 삭제되었습니다!");
   };
 
@@ -50,6 +39,7 @@ export default function FeedPage({ onPostClick }) {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
     const reader = new FileReader();
     reader.onload = () => setNewImage(reader.result as string);
     reader.readAsDataURL(file);
@@ -63,15 +53,13 @@ export default function FeedPage({ onPostClick }) {
     const userTeam =
       newPostTeam ||
       currentUser.team ||
-      { id: currentUser.teamId || "etc", name: currentUser.team?.name || "기타" };
+      { id: currentUser.teamId, name: currentUser.team?.name };
 
-    const post: Post = {
+    const newFeed: Post = {
       id: Date.now().toString(),
       author: currentUser.username,
       authorId: currentUser.id,
-      avatar:
-        currentUser.avatar ||
-        "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100",
+      avatar: currentUser.avatar,
       content: newPost,
       image: newImage || undefined,
       team: userTeam,
@@ -85,16 +73,16 @@ export default function FeedPage({ onPostClick }) {
         avatar: currentUser.avatar,
         team: userTeam,
       },
+      isMine: true,
     };
 
-    const updated = [post, ...posts];
-    setPosts(updated);
-    localStorage.setItem("posts", JSON.stringify(updated));
+    addPost(newFeed);
 
     setNewPost("");
     setNewImage(null);
     setShowCreatePost(false);
     setNewPostTeam(null);
+
     toast.success("게시글이 작성되었습니다 🎉");
   };
 
@@ -103,27 +91,25 @@ export default function FeedPage({ onPostClick }) {
     if (!editingPost) return;
     if (!newPost.trim()) return toast.error("내용을 입력해주세요!");
 
-    const updated = posts.map((p) =>
-      p.id === editingPost.id
-        ? { ...p, content: newPost, image: newImage || p.image }
-        : p
-    );
+    const updated: Post = {
+      ...editingPost,
+      content: newPost,
+      image: newImage !== null ? newImage : editingPost.image,
+    };
 
-    setPosts(updated);
-    localStorage.setItem("posts", JSON.stringify(updated));
+    updatePost(updated);
 
     toast.success("게시글이 수정되었습니다!");
+
     setEditingPost(null);
     setNewPost("");
     setNewImage(null);
     setShowCreatePost(false);
   };
 
-
-
   /* 🏷 팀 필터 */
   const filteredPosts = selectedTeam
-    ? posts.filter((p) => p.team?.id === selectedTeam?.id)
+    ? posts.filter((p) => p.team?.id === selectedTeam.id)
     : posts;
 
   return (
@@ -159,29 +145,22 @@ export default function FeedPage({ onPostClick }) {
                 value={newPost}
                 onChange={(e) => setNewPost(e.target.value)}
                 placeholder="무슨 생각을 하고 계신가요?"
-                className="w-full bg-transparent text-gray-900 dark:text-gray-100 resize-none px-2 py-2 focus:outline-none"
+                className="w-full bg-transparent resize-none px-2 py-2 focus:outline-none"
                 rows={3}
                 autoFocus
               />
 
-              {/* 미리보기 이미지 */}
+              {/* 이미지 미리보기 */}
               {newImage && (
-                <img
-                  src={newImage}
-                  alt="preview"
-                  className="w-full rounded-xl mb-2"
-                />
+                <img src={newImage} alt="preview" className="w-full rounded-xl mb-2" />
               )}
 
-              <div className="flex justify-between items-center px-2 relative z-40">
+              <div className="flex justify-between items-center px-2 z-40">
                 <div className="flex items-center gap-2">
-                  {/* 🖼 이미지 업로드 */}
-                  <label
-                    htmlFor="feedUpload"
-                    className="cursor-pointer p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full relative z-50"
-                  >
+                  <label htmlFor="feedUpload" className="cursor-pointer p-2">
                     <ImageIcon className="w-5 h-5 text-gray-500" />
                   </label>
+
                   <input
                     id="feedUpload"
                     type="file"
@@ -190,18 +169,14 @@ export default function FeedPage({ onPostClick }) {
                     className="hidden"
                   />
 
-                  {/* 🏷 구단 선택 (z-index 강화) */}
-                  <div className="relative z-50">
-                    <TeamSelector
-                      selectedTeam={newPostTeam}
-                      onSelectTeam={setNewPostTeam}
-                      showAll={false}
-                    />
-                  </div>
+                  <TeamSelector
+                    selectedTeam={newPostTeam}
+                    onSelectTeam={setNewPostTeam}
+                    showAll={false}
+                  />
                 </div>
 
-                {/* ✅ 버튼 그룹 */}
-                <div className="flex gap-2 z-50">
+                <div className="flex gap-2">
                   <button
                     onClick={() => {
                       setShowCreatePost(false);
@@ -214,18 +189,15 @@ export default function FeedPage({ onPostClick }) {
                     취소
                   </button>
 
-                  {/* ✅ 항상 표시되게 수정 */}
                   <button
-                    onClick={handleCreatePost}
+                    onClick={editingPost ? handleUpdatePost : handleCreatePost}
                     disabled={!newPost.trim()}
                     className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-full"
                   >
                     게시
                   </button>
-
                 </div>
               </div>
-
             </div>
           )}
         </motion.div>
@@ -238,16 +210,19 @@ export default function FeedPage({ onPostClick }) {
             key={post.id}
             post={post}
             index={index}
-            onLike={handleLike}
+            onEdit={(p) => {
+              setEditingPost(p);
+              setNewPost(p.content);
+              setNewImage(p.image || null);
+              setShowCreatePost(true);
+            }}
             onDelete={handleDelete}
             onPostClick={onPostClick}
           />
         ))
       ) : (
         <p className="text-gray-500 text-center py-10">
-          {selectedTeam
-            ? "해당 구단의 게시글이 없습니다."
-            : "아직 게시글이 없습니다."}
+          {selectedTeam ? "해당 구단의 게시글이 없습니다." : "아직 게시글이 없습니다."}
         </p>
       )}
     </div>

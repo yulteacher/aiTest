@@ -1,0 +1,120 @@
+.wrap {
+    width: 100%;
+    height: 100%;
+    stroke-width: 3.2;
+    stroke-linecap: round;
+    background: #ccc;
+    /*     transform: rotate(-90deg);
+    transform-origin: center; */
+}
+
+
+.circle .percent {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 18px;
+    font-weight: 700;
+}
+
+
+.nums {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+
+.nums strong {
+    font-size: 20px;
+    color: #b010c7;
+}
+
+
+/* -------------------- */
+/* WORKSPACE WIDGET */
+/* -------------------- */
+.workspaceWidget h4 {
+    font-size: 16px;
+    margin-bottom: 16px;
+    font-weight: 600;
+}
+
+
+.teamList {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    text-align: center;
+    gap: 10px;
+}
+
+
+.teamCircle {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: #eae7ee;
+    margin: 0 auto 6px auto;
+}
+
+
+/* -------------------- */
+/* TODO WIDGET */
+/* -------------------- */
+.todoWidget {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: yellow;
+}
+
+
+.dateBox {
+    text-align: left;
+
+}
+
+
+.dateBox .day {
+    font-size: 14px;
+    color: #555;
+}
+
+
+.dateBox .big {
+    font-size: 38px;
+    font-weight: 700;
+    margin: 6px 0;
+}
+
+
+.dateBox .weekday {
+    font-size: 14px;
+    color: #555;
+}
+
+
+
+.todoList h4 {
+    margin-bottom: 6px;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+
+.todoList ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+
+.todoList li {
+    font-size: 14px;
+    margin-bottom: 4px;
+}
+
+.widgerbox {
+    border: 5px solid red;
+}

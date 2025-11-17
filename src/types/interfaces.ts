@@ -1,25 +1,42 @@
 // ===============================
-// 🎯 KBO 팬덤 커뮤니티 인터페이스 통합 (MyPage 호환 완전 버전)
+// ⚾ FANBASE — 인터페이스 통합 구조 (확정본)
 // ===============================
 
-// ⚾ 1️⃣ 유저 정보 (회원가입 / 로그인 / 활동 기반)
-export interface User {
-  id: string;                // ex) "u_lg_5"
-  username: string;          // 닉네임 (중복 불가)
-  password: string;          // 로그인용 비밀번호 (local only)
-  teamId: string;            // ex) "lg"
-  avatar: string;            // ✅ 프로필 이미지
-  xp: number;                // 경험치
-  level: number;             // 레벨
-  badges: string[];          // 배지 리스트
-  joinedAt: string;          // 가입일
-
-  // ✅ 추가 필드 (MyPage 등에서 사용)
-  bio?: string;              // 자기소개 (선택)
-  team?: Team;
+// -----------------------------------------------------
+// 1) Badge ENUM
+// -----------------------------------------------------
+export enum BadgeCategory {
+  Join = "join",
+  Level = "level",
+  Vote = "vote",
+  Comment = "comment",
+  Feed = "feed",
+  Login = "login",
 }
 
-// ⚾ 2️⃣ 팀 정보 (정적 데이터)
+export enum BadgeTier {
+  Tier1 = 1,
+  Tier2 = 2,
+  Tier3 = 3,
+  Tier4 = 4,
+  Tier5 = 5,
+}
+
+// -----------------------------------------------------
+// 2) Badge
+// -----------------------------------------------------
+export interface Badge {
+  id: string;
+  category: BadgeCategory;
+  tier: BadgeTier;
+  name: string;
+  description: string;
+  icon: string;
+}
+
+// -----------------------------------------------------
+// 3) Team
+// -----------------------------------------------------
 export interface Team {
   id: string;
   name: string;
@@ -32,76 +49,117 @@ export interface Team {
   lightGradient: string;
 }
 
-// ⚾ 3️⃣ 게시글 (Feed)
-export interface Post {
+// -----------------------------------------------------
+// 4) User
+// -----------------------------------------------------
+export interface User {
   id: string;
+  username: string;
+  password: string;
+
+  teamId: string;
+  team?: Team;
+
+  avatar: string;
+
+  xp: number;
+  level: number;
+
+  // 활동 통계
+  feedCount: number;
+  commentCount: number;
+  voteCount: number;
+  loginCount: number;
+  loginDays: number;
+
+  joinedAt: string;
+
+  bio?: string;
+  badges?: string[];
+}
+
+// -----------------------------------------------------
+// 5) Comment (PostDetailPage 기준 통합)
+// -----------------------------------------------------
+export interface Comment {
+  id: string;
+  authorId: string | null;
   author: string;
-  authorId?: string;
   avatar?: string;
   content: string;
-  image?: string;
-  likes: number;
-  liked?: boolean;
-  commentsList?: any[];
   timestamp: string;
+  emotion?: "공감" | "드립" | "정보" | "비판";
+}
+
+// -----------------------------------------------------
+// 6) Post
+// -----------------------------------------------------
+export interface Post {
+  id: string;
+
+  // 작성자 정보
+  author: string;
+  authorId?: string;
+  authorName?: string;      // ⭐ FeedPage 필수
+  avatar?: string;
+
+  // 내용
+  content: string;
+  image?: string;
+
+  // 좋아요
+  likes: number;
+  liked?: boolean;          // ⭐ FeedPage 필수
+  isLiked?: boolean;        // 다른 페이지 호환
+
+  // 댓글
+  comments?: number;        // ⭐ FeedPage 필수 (갯수만)
+  commentsList?: Comment[]; // 상세 페이지 용
+
+  // 공통
+  timestamp: string;
+
+  // 선택
   team?: {
     id: string;
     name: string;
     color?: string;
   };
-  // ✅ 추가: user 객체 (닉네임, 팀, 아바타 표시용)
   user?: {
     id: string;
     username: string;
     avatar?: string;
-    team?: {
-      id: string;
-      name: string;
-      color?: string;
-    };
+    team?: { id: string; name: string; color?: string };
   };
   isMine?: boolean;
 }
 
 
-
-// ⚾ 4️⃣ 댓글 (게시글 하위)
-export interface Comment {
-  id: string;
-  postId: string;
-  authorId: string;
-  content: string;
-  timestamp: string;
-  emotion: '공감' | '드립' | '정보' | '비판';
-}
-/* export interface Comment {
-  id: string;
-  authorId: string;
-  authorName: string;
-  avatar?: string;
-  content: string;
-  timestamp: string;
-} */
-// ⚾ 5️⃣ 투표 (Poll)
+// -----------------------------------------------------
+// 7) Poll
+// -----------------------------------------------------
 export interface Poll {
   id: string;
+
   author: string;
   avatar?: string;
-  teamId: string | 'all';
-  category: '팀투표' | '리그이슈' | '이벤트';
-  question: string;
-  options: { id: string; text: string; votes: number }[];
-  totalVotes: number;
-  userVotes: Record<string, string>;
-  createdBy: string;
-  timestamp: string;
-}
 
-// ⚾ 6️⃣ 배지 (BadgeGrid.tsx, MyPage.tsx 연동)
-export interface Badge {
-  id: string;
-  name: string;
-  description: string;
-  icon: string;
-  condition: string;
+  question: string;
+
+  team?: Team | null;
+
+  options: {
+    id: string;
+    text: string;
+    votes: number;
+  }[];
+
+  totalVotes: number;
+
+  userVotes: Record<string, string>;
+
+  timestamp: string;
+
+  category?: "팀투표" | "리그이슈" | "이벤트";
+  createdBy?: string;
 }

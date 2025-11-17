@@ -14,6 +14,8 @@ interface MyPageProps {
   onLogout: () => void;
   onNavigate: (path: string) => void;
   onUpdateUser?: (user: User) => void; // ✅ 선택적 (optional)
+  showSection?: string;
+  suppressOuterUI?: boolean;
 }
 export default function MyPage({ user, onLogout, onNavigate, onUpdateUser }: MyPageProps) {
   const [notifications, setNotifications] = useState([]);
@@ -21,7 +23,8 @@ export default function MyPage({ user, onLogout, onNavigate, onUpdateUser }: MyP
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [editedUser, setEditedUser] = useState({ ...user });
   const [newProfileImage, setNewProfileImage] = useState(null);
-  const { currentUser, setCurrentUser } = useAppDataContext();
+  const { currentUser, setCurrentUser, users } = useAppDataContext();
+
   const { getLevelInfo } = useXPSystem();
   const { level, xp, progress, toNext } = getLevelInfo();
   const team = KBO_TEAMS.find(

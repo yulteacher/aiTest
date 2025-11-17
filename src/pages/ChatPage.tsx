@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Send, Bot, Sparkles } from 'lucide-react';
+import { useAppDataContext } from "../context/AppDataContext";
 
 export default function ChatPage({ isFloating = false }) {
   const [messages, setMessages] = useState([]);

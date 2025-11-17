@@ -25,6 +25,7 @@ export default function Navigation({
         { id: "feed", icon: Rss, label: "피드" },
         { id: "polls", icon: TrendingUp, label: "투표" },
         { id: "mypage", icon: User, label: "마이" },
+        { id: "test", icon: User, label: "test" },
     ];
 
     return (

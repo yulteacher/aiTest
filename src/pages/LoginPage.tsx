@@ -4,9 +4,10 @@ import { LogIn, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import AnimatedButton from '../components/yului/AnimatedButton';
 import Iridescence from '../components/reactbits/Iridescence';
-
+import { useAppDataContext } from "../context/AppDataContext";
 
 export default function LoginPage({ onLogin, navigateTo }) {
+  const { setCurrentUser } = useAppDataContext();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -33,6 +34,7 @@ export default function LoginPage({ onLogin, navigateTo }) {
     }
 
     localStorage.setItem("currentUser", JSON.stringify(foundUser));
+    setCurrentUser(foundUser);     // 🔥 필수! MainApp에 로그인 전달
     toast.success(`${foundUser.username}님, 환영합니다 🎉`);
     onLogin(foundUser);
     navigateTo("home");

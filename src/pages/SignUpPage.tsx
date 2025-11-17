@@ -5,7 +5,11 @@ import { KBO_TEAMS } from "../data/constants/teams";
 import { toast } from "sonner";
 import TeamLogo from '../components/yului/TeamLogo';
 import AnimatedButton from '../components/yului/AnimatedButton';
+import type { User } from "../types/interfaces";
+import { useAppDataContext } from "../context/AppDataContext";
+
 export default function SignUpPage({ onSignup, navigateTo }) {
+    const { setCurrentUser } = useAppDataContext();
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
@@ -94,19 +98,31 @@ export default function SignUpPage({ onSignup, navigateTo }) {
         // ✅ 1️⃣ team 객체를 보장
         const teamInfo = KBO_TEAMS.find(t => t.id === selectedTeam.id);
 
-        const newUser = {
+        const newUser: User = {
             id: `u_${selectedTeam.id}_${Date.now()}`,
             username: username.trim(),
             password,
+
+            // 🔥 필수값
+            loginCount: 0,
+            feedCount: 0,
+            loginDays: 0,
+            commentCount: 0,
+            voteCount: 0,
+
             teamId: selectedTeam.id,
-            team: teamInfo,  // ✅ 반드시 실제 team 객체를 저장
+            team: teamInfo,
+
             avatar:
                 profileImage ||
                 `https://api.dicebear.com/7.x/avataaars/svg?seed=${username}`,
+
             xp: 0,
             level: 1,
-            badges: [],
+            badges: ["welcome_1"],
+
             joinedAt: new Date().toISOString(),
+
             bio: `${selectedTeam.name} 팬이에요! ⚾`,
         };
 
@@ -115,6 +131,8 @@ export default function SignUpPage({ onSignup, navigateTo }) {
         const updatedUsers = [...users, newUser];
         localStorage.setItem("users", JSON.stringify(updatedUsers));
         localStorage.setItem("currentUser", JSON.stringify(newUser));
+
+        setCurrentUser(newUser);
 
         // ✅ 3️⃣ 상태 업데이트 (App으로 user 전달)
         toast.success(`${newUser.username}님, 가입을 환영합니다 🎉`);

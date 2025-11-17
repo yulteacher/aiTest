@@ -1,0 +1,15 @@
+<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="grad_join" cx="50%" cy="50%" r="60%">
+      <stop offset="0%" stop-color="#D8B4FE"/>
+      <stop offset="100%" stop-color="#A855F7"/>
+    </radialGradient>
+  </defs>
+
+  <circle cx="64" cy="64" r="56" fill="url(#grad_join)" stroke="#fff" stroke-width="6"/>
+
+  <path d="M64 32a20 20 0 0120 20c0 11.046-20 32-20 32S44 63.046 44 52a20 20 0 0120-20z" 
+        fill="#fff" fill-opacity="0.9"/>
+
+  <circle cx="64" cy="52" r="8" fill="#A855F7"/>
+</svg>
