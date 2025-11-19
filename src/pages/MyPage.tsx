@@ -1,110 +1,145 @@
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Edit2, Settings, LogOut, Award, Zap, Heart, Bell, MessageCircle, TrendingUp, UserPlus, X, Camera, Check, ChevronDown } from 'lucide-react';
+import { motion, AnimatePresence, Reorder, useDragControls } from 'framer-motion';
+import {
+  Edit2, LogOut, Award, Zap, Heart, MessageCircle, TrendingUp,
+  UserPlus, X, Camera, Check, ChevronDown, GripVertical
+} from 'lucide-react';
+
 import { KBO_TEAMS } from '../data/constants/teams';
 import { toast } from 'sonner';
+
 import TeamLogo from '../components/yului/TeamLogo';
 import TeamAvatar from '../components/yului/TeamAvatar';
+
 import { useXPSystem } from "../hooks/useXPSystem";
+import { useBadgeSystem } from '../hooks/useBadgeSystem';
 import { useAppDataContext } from "../context/AppDataContext";
-import type { Post, Poll, User } from '../types/interfaces'
 
-interface MyPageProps {
-  user: User;
-  onLogout: () => void;
-  onNavigate: (path: string) => void;
-  onUpdateUser?: (user: User) => void; // ✅ 선택적 (optional)
-  showSection?: string;
-  suppressOuterUI?: boolean;
-}
-export default function MyPage({ user, onLogout, onNavigate, onUpdateUser }: MyPageProps) {
-  const [notifications, setNotifications] = useState([]);
-  const [activeSection, setActiveSection] = useState('profile');
-  const [isEditingProfile, setIsEditingProfile] = useState(false);
-  const [editedUser, setEditedUser] = useState({ ...user });
-  const [newProfileImage, setNewProfileImage] = useState(null);
-  const { currentUser, setCurrentUser, users } = useAppDataContext();
+import BadgeLayout from '../components/badges/BadgeLayout';
+import BadgeIcon from '../components/badges/BadgeIcon';
 
-  const { getLevelInfo } = useXPSystem();
-  const { level, xp, progress, toNext } = getLevelInfo();
-  const team = KBO_TEAMS.find(
-    (t) => t.id === (editedUser?.teamId || currentUser?.teamId || user?.teamId)
+
+
+// ----------------------------------------------------------------------
+// 🧩 Draggable Widget Component
+// ----------------------------------------------------------------------
+function DraggableWidget({ widgetType, children, setIsDragging, isBadgeDragging }) {
+  return (
+    <Reorder.Item
+      value={widgetType}
+      dragListener={true}
+      drag={isBadgeDragging ? false : true}   // ⭐ 중요!
+      onDragStart={() => !isBadgeDragging && setIsDragging(true)}
+      onDragEnd={() => !isBadgeDragging && setIsDragging(false)}
+      className="relative group cursor-grab active:cursor-grabbing"
+      initial={false}
+      whileDrag={{
+        scale: 1.02,
+        opacity: 0.9,
+        boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+        zIndex: 100,
+        cursor: 'grabbing'
+      }}
+      transition={{ duration: 0.2 }}
+    >
+      {children}
+    </Reorder.Item>
   );
+}
+
+export default function MyPage({ onLogout, onNavigate }) {
+  const [isDragging, setIsDragging] = useState(false);
+  const [isBadgeDragging, setIsBadgeDragging] = useState(false);
+  /* ==========================================================
+     🔥 전역 유저 데이터 (단일 기준: currentUser만 사용)
+  ========================================================== */
+  const { currentUser, setCurrentUser, users } = useAppDataContext();
+  if (!currentUser) return null;
+  /* ==========================================================
+       🔥 state
+    ========================================================== */
+  const [activeSection, setActiveSection] = useState<'profile' | 'notifications'>('profile');
+
+  /* ==========================================================
+     🔥 XP 시스템 / 레벨 정보
+  ========================================================== */
+  const { getLevelInfo } = useXPSystem();
+  const [levelInfo, setLevelInfo] = useState(() => getLevelInfo());
+
+  // currentUser가 변경될 때마다 레벨 정보 업데이트
+  useEffect(() => {
+    setLevelInfo(getLevelInfo());
+  }, [currentUser]); // getLevelInfo 제거 - 무한 루프 방지
+
+  /* ==========================================================
+     🔥 뱃지 시스템
+  ========================================================== */
+  const { checkAllBadges } = useBadgeSystem();
+  const [badgeReady, setBadgeReady] = useState(false);
 
   useEffect(() => {
-    const savedNotifications = localStorage.getItem('notifications');
-    if (savedNotifications) {
-      setNotifications(JSON.parse(savedNotifications));
-    } else {
-      const defaults = [
-        {
-          id: '1', type: 'like', user: '야구덕후',
-          avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop',
-          message: '님이 회원님의 경기 리뷰를 좋아합니다', timestamp: '5분 전', read: false,
-        },
-        {
-          id: '2', type: 'comment', user: 'KBO매니아',
-          avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop',
-          message: '님이 회원님의 게시물에 댓글을 남겼습니다', timestamp: '1시간 전', read: false,
-        },
-        {
-          id: '3', type: 'poll', user: '야구팬',
-          avatar: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=100&h=100&fit=crop',
-          message: '님의 우승팀 예상 투표에 453명이 참여했습니다', timestamp: '2시간 전', read: true,
-        },
-      ];
-      setNotifications(defaults);
-      localStorage.setItem('notifications', JSON.stringify(defaults));
+    if (currentUser) setBadgeReady(true);
+  }, [currentUser]);
+
+  useEffect(() => {
+    if (!badgeReady) return;
+    checkAllBadges();
+  }, [badgeReady]);
+
+  /* ==========================================================
+     🔥 프로필 편집 상태
+  ========================================================== */
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [editedUser, setEditedUser] = useState({ ...currentUser });
+  const [newProfileImage, setNewProfileImage] = useState(null);
+
+  /* ==========================================================
+     🔥 알림
+  ========================================================== */
+  const [notifications, setNotifications] = useState([]);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('notifications');
+
+    if (saved) {
+      setNotifications(JSON.parse(saved));
+      return;
     }
+
+    const defaults = [
+      {
+        id: '1', type: 'like', user: '야구덕후',
+        avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop',
+        message: '님이 회원님의 경기 리뷰를 좋아합니다', timestamp: '5분 전', read: false,
+      },
+      {
+        id: '2', type: 'comment', user: 'KBO매니아',
+        avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop',
+        message: '님이 회원님의 게시물에 댓글을 남겼습니다', timestamp: '1시간 전', read: false,
+      },
+      {
+        id: '3', type: 'poll', user: '야구팬',
+        avatar: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=100&h=100&fit=crop',
+        message: '님의 우승팀 예상 투표에 453명이 참여했습니다', timestamp: '2시간 전', read: true,
+      },
+    ];
+
+    setNotifications(defaults);
+    localStorage.setItem('notifications', JSON.stringify(defaults));
   }, []);
 
-  const stats = [
-    { label: '게시글', value: 12, icon: Edit2, color: 'from-teal-500 to-cyan-600' },
-    { label: '좋아요', value: 234, icon: Heart, color: 'from-cyan-400 to-sky-600' },
-    { label: '댓글', value: 89, icon: Award, color: 'from-teal-400 to-cyan-600' },
-  ];
+  const unreadCount = notifications.filter(n => !n.read).length;
 
-  const getIcon = (type) => {
-    const iconProps = { className: "w-5 h-5" };
-    switch (type) {
-      case 'like':
-        return <Heart {...iconProps} className="w-5 h-5 text-cyan-500" fill="currentColor" />;
-      case 'comment':
-        return <MessageCircle {...iconProps} className="w-5 h-5 text-teal-600" />;
-      case 'poll':
-        return <TrendingUp {...iconProps} className="w-5 h-5 text-sky-500" />;
-      case 'follow':
-        return <UserPlus {...iconProps} className="w-5 h-5 text-teal-600" />;
-      default:
-        return null;
-    }
-  };
+  /* ==========================================================
+     🔥 응원 구단
+  ========================================================== */
+  const team =
+    KBO_TEAMS.find(t => t.id === (editedUser?.teamId ?? currentUser?.teamId));
 
-  const markAsRead = (id) => {
-    const updatedNotifications = notifications.map((notif) =>
-      notif.id === id ? { ...notif, read: true } : notif
-    );
-    setNotifications(updatedNotifications);
-    localStorage.setItem('notifications', JSON.stringify(updatedNotifications));
-  };
-
-  const markAllAsRead = () => {
-    const updatedNotifications = notifications.map((notif) => ({
-      ...notif,
-      read: true,
-    }));
-    setNotifications(updatedNotifications);
-    localStorage.setItem('notifications', JSON.stringify(updatedNotifications));
-  };
-
-  const dismissNotification = (id) => {
-    const updatedNotifications = notifications.filter((notif) => notif.id !== id);
-    setNotifications(updatedNotifications);
-    localStorage.setItem('notifications', JSON.stringify(updatedNotifications));
-  };
-
-  // ✅ 이미지 업로드 (자동 압축 포함)
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  /* ==========================================================
+     🔥 이미지 업로드 (자동압축)
+  ========================================================== */
+  const handleImageUpload = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -112,13 +147,14 @@ export default function MyPage({ user, onLogout, onNavigate, onUpdateUser }: MyP
     reader.onloadend = () => {
       const img = new Image();
       img.src = reader.result as string;
+
       img.onload = () => {
         const canvas = document.createElement("canvas");
         const ctx = canvas.getContext("2d");
 
-        // ✅ 해상도 제한 (최대 256x256으로 리사이즈)
         const maxSize = 256;
         let { width, height } = img;
+
         if (width > height) {
           if (width > maxSize) {
             height *= maxSize / width;
@@ -130,79 +166,330 @@ export default function MyPage({ user, onLogout, onNavigate, onUpdateUser }: MyP
             height = maxSize;
           }
         }
+
         canvas.width = width;
         canvas.height = height;
-
-        // ✅ 이미지 그리기 (압축 전처리)
         ctx?.drawImage(img, 0, 0, width, height);
 
-        // ✅ WebP로 변환 + 품질 0.7 설정
         const compressed = canvas.toDataURL("image/webp", 0.7);
 
-        // ✅ 상태 반영
         setNewProfileImage(compressed);
         setEditedUser(prev => ({ ...prev, avatar: compressed }));
-        toast.success("이미지가 자동으로 최적화되었습니다 ⚡");
       };
     };
     reader.readAsDataURL(file);
   };
 
-
+  /* ==========================================================
+     🔥 프로필 저장
+     (currentUser 모든 필드 보전 필수)
+  ========================================================== */
   const handleSaveProfile = () => {
-    const users = JSON.parse(localStorage.getItem('users') || '[]');
-    const updatedUsers = users.map(u => {
-      if (u.id === user.id) {
-        return {
-          ...u,
-          teamId: editedUser.teamId,
-          bio: editedUser.bio,
-          avatar: editedUser.avatar || u.avatar
-        };
-      }
-      return u;
-    });
-    localStorage.setItem('users', JSON.stringify(updatedUsers));
-    const selectedTeam = KBO_TEAMS.find(t => t.id === editedUser.teamId);
-    const updatedCurrentUser = {
-      ...user,
+    const updated = {
+      ...currentUser,
       teamId: editedUser.teamId,
-      team: selectedTeam, // ✅ 팀 객체 동기화
       bio: editedUser.bio,
-      avatar: editedUser.avatar || user.avatar
+      avatar: editedUser.avatar ?? currentUser.avatar,
     };
 
-    // ✅ Context 갱신
-    setCurrentUser(updatedCurrentUser);
-    localStorage.setItem('currentUser', JSON.stringify(updatedCurrentUser));
+    // Context 저장
+    setCurrentUser(updated);
+    localStorage.setItem("currentUser", JSON.stringify(updated));
+
+    // users 배열도 갱신
+    const updatedList = users.map(u => (u.id === updated.id ? updated : u));
+    localStorage.setItem("users", JSON.stringify(updatedList));
 
     setIsEditingProfile(false);
-    toast.success('프로필이 업데이트되었습니다!');
+    toast.success("프로필이 업데이트되었습니다!");
   };
 
 
-  const unreadCount = notifications.filter(n => !n.read).length;
+
+  /* ==========================================================
+     🔥 알림 아이콘
+  ========================================================== */
+  const getIcon = (type) => {
+    const p = { className: "w-5 h-5" };
+    switch (type) {
+      case 'like': return <Heart {...p} className="text-cyan-500" fill="currentColor" />;
+      case 'comment': return <MessageCircle {...p} className="text-teal-600" />;
+      case 'poll': return <TrendingUp {...p} className="text-sky-500" />;
+      case 'follow': return <UserPlus {...p} className="text-teal-600" />;
+      default: return null;
+    }
+  };
+
+  const markAsRead = (id) => {
+    const next = notifications.map(n => n.id === id ? { ...n, read: true } : n);
+    setNotifications(next);
+    localStorage.setItem("notifications", JSON.stringify(next));
+  };
+
+  const markAllAsRead = () => {
+    const next = notifications.map(n => ({ ...n, read: true }));
+    setNotifications(next);
+    localStorage.setItem("notifications", JSON.stringify(next));
+  };
+
+  const dismissNotification = (id) => {
+    const next = notifications.filter(n => n.id !== id);
+    setNotifications(next);
+    localStorage.setItem("notifications", JSON.stringify(next));
+  };
+
+  /* ==========================================================
+     🔥 위젯 순서 변경 (Drag & Drop)
+  ========================================================== */
+  type WidgetType = 'profile' | 'menu' | 'badges' | 'level';
+  const [widgetOrder, setWidgetOrder] = useState<WidgetType[]>(['profile', 'menu', 'badges', 'level']);
+
+  const renderWidget = (type: WidgetType) => {
+    switch (type) {
+      case 'profile':
+        return (
+          <div className="bg-gradient-to-br from-teal-500 via-cyan-500 to-sky-600 rounded-2xl p-6 text-white shadow-2xl">
+            <div className="flex flex-col items-center">
+
+              {/* 아바타 */}
+              {isEditingProfile ? (
+                <motion.div
+                  initial={{ scale: 0.9, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  className="relative"
+                >
+                  <TeamAvatar
+                    team={team?.name}
+                    src={editedUser?.avatar}
+                    size="xl"
+                    className="border-4 border-white"
+                  />
+                  <label className="absolute bottom-0 right-0 bg-white text-teal-700 rounded-full p-2 cursor-pointer">
+                    <Camera className="w-4 h-4" />
+                    <input
+                      type="file"
+                      className="hidden"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                    />
+                  </label>
+                </motion.div>
+              ) : (
+                <TeamAvatar
+                  team={team?.name}
+                  src={currentUser.avatar}
+                  size="xl"
+                  className="border-4 border-white mb-4"
+                />
+              )}
+
+              {/* 구단 표시 */}
+              {team && (
+                <div className="mt-3 bg-white/20 rounded-full px-4 py-2 flex items-center gap-2">
+                  <TeamLogo team={team.id} size="md" />
+                  <span>{team.name}</span>
+                </div>
+              )}
+
+              <h2 className="mt-4">{currentUser.username}</h2>
+              <p className="text-white/80">@{currentUser.username}</p>
+
+              {/* 소개 */}
+              {isEditingProfile ? (
+                <div className="mt-3 w-full max-w-xs border-t border-white/20 py-3">
+                  <label className="text-white/80 text-sm mb-2 block">소개</label>
+                  <textarea
+                    value={editedUser.bio || ''}
+                    onChange={(e) => setEditedUser({ ...editedUser, bio: e.target.value })}
+                    rows={3}
+                    className="w-full bg-white/20 text-white rounded-xl px-4 py-2 border border-white/30 resize-none"
+                  />
+                </div>
+              ) : (
+                <p className="text-white/90 text-center mt-3 text-sm">
+                  {currentUser.bio || 'KBO를 사랑하는 열정적인 야구팬입니다! ⚾'}
+                </p>
+              )}
+
+              {/* 버튼 */}
+              <div className="mt-4 flex gap-2">
+                {isEditingProfile ? (
+                  <>
+                    <button
+                      onClick={(e) => {
+                        if (isDragging) return e.stopPropagation();
+                        setIsEditingProfile(false);
+                        setEditedUser({ ...currentUser });
+                        setNewProfileImage(null);
+                      }}
+                      className="px-4 py-2 bg-white/20 rounded-xl cursor-pointer"
+                    >
+                      취소
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        if (isDragging) return e.stopPropagation();
+                        handleSaveProfile()
+                      }}
+                      className="px-4 py-2 bg-white text-teal-700 rounded-xl flex items-center gap-2 cursor-pointer"
+                    >
+                      <Check className="w-4 h-4" />
+                      저장
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    onClick={(e) => {
+                      if (isDragging) return e.stopPropagation();
+                      setEditedUser({ ...currentUser });
+                      setIsEditingProfile(true);
+                    }}
+                    className="px-4 py-2 bg-white/20 rounded-xl flex items-center gap-2 cursor-pointer"
+                  >
+                    <Edit2 className="w-4 h-4" />
+                    프로필 수정
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* 통계 */}
+            <div className="grid grid-cols-3 gap-4 mt-6 pt-6 border-t border-white/20">
+              <div className="text-center">
+                <Edit2 className="w-5 h-5 mx-auto mb-2" />
+                <p className="text-xl">12</p>
+                <span className="text-xs">게시글</span>
+              </div>
+              <div className="text-center">
+                <Heart className="w-5 h-5 mx-auto mb-2" />
+                <p className="text-xl">234</p>
+                <span className="text-xs">좋아요</span>
+              </div>
+              <div className="text-center">
+                <Award className="w-5 h-5 mx-auto mb-2" />
+                <p className="text-xl">89</p>
+                <span className="text-xs">댓글</span>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'menu':
+        return (
+          <div className="glass-card rounded-2xl overflow-hidden">
+            <button
+              onClick={(e) => {
+                if (isDragging) return e.stopPropagation();
+                localStorage.setItem("selectedTeamForPolls", JSON.stringify(team));
+                onNavigate("polls");
+              }}
+              className="w-full flex items-center gap-3 px-4 py-3 border-b border-gray-100 dark:border-gray-700/50 cursor-pointer hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
+            >
+              <TrendingUp className="w-5 h-5 text-teal-600" />
+              <span>내 구단 투표 보기</span>
+            </button>
+
+            <button
+              onClick={(e) => {
+                if (isDragging) return e.stopPropagation();
+                onLogout()
+              }}
+              className="w-full flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
+            >
+              <LogOut className="w-5 h-5 text-rose-600" />
+              <span>로그아웃</span>
+            </button>
+          </div>
+        );
+
+      case 'badges':
+        return (
+          <div className="glass-card rounded-2xl p-5">
+            <h3 className="mb-4 font-medium">내 배지</h3>
+            <BadgeLayout
+              isDragging={isDragging}
+              setIsBadgeDragging={setIsBadgeDragging}
+              top5Badges={[currentUser.equippedBadges.main, ...currentUser.equippedBadges.slots]}
+              showLabel={true}
+              onUpdate={(updatedLayout) => {
+                if (isDragging) return;
+                const nextEquipped = {
+                  main: updatedLayout.mainBadge,
+                  slots: updatedLayout.slots
+                };
+                const updated = { ...currentUser, equippedBadges: nextEquipped };
+                setCurrentUser(updated);
+              }}
+            />
+          </div>
+        );
+
+      case 'level':
+        return (
+          <div className="glass-card overflow-hidden rounded-2xl p-5">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="flex items-center gap-2 font-medium">
+                <Zap className="w-5 h-5 text-teal-500" />
+                레벨 {levelInfo.level}
+              </h3>
+              <span className="text-sm">{levelInfo.progress}%</span>
+            </div>
+
+            <div className="h-2.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${levelInfo.progress}%` }}
+                transition={{ duration: 0.8 }}
+                className="h-full bg-gradient-to-r from-teal-400 to-cyan-500"
+              />
+            </div>
+
+            <p className="text-sm mt-3">
+              다음 레벨까지 {levelInfo.toNext} XP 남음 (총 {levelInfo.xp} XP)
+            </p>
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
+
+  /* ==========================================================
+     🔥 렌더링
+  ========================================================== */
   return (
     <div className="p-4 space-y-4">
-      {/* 탭 전환 */}
+
+      {/* 상단 탭 */}
       <div className="flex gap-2 glass-card rounded-2xl p-2">
         <button
-          onClick={() => setActiveSection('profile')}
-          className={`flex-1 py-3 rounded-xl transition-all text-center ${activeSection === 'profile'
-            ? 'bg-gradient-to-r from-teal-500 to-cyan-500 dark:from-[#00d5be] dark:to-[#00b8db] text-white'
+          onClick={
+            (e) => {
+              if (isDragging) return e.stopPropagation();
+              setActiveSection('profile')
+            }
+          }
+          className={`flex-1 py-3 rounded-xl ${activeSection === 'profile'
+            ? 'bg-gradient-to-r from-teal-500 to-cyan-500 text-white'
             : 'text-gray-600 dark:text-gray-400'
             }`}
         >
           프로필
         </button>
+
         <button
-          onClick={() => setActiveSection('notifications')}
-          className={`flex-1 py-3 rounded-xl transition-all relative text-center ${activeSection === 'notifications'
-            ? 'bg-gradient-to-r from-teal-500 to-cyan-500 dark:from-[#00d5be] dark:to-[#00b8db] text-white'
+          onClick={
+            (e) => {
+              if (isDragging) return e.stopPropagation();
+              setActiveSection('notifications')
+            }
+          }
+          className={`flex-1 py-3 rounded-xl relative ${activeSection === 'notifications'
+            ? 'bg-gradient-to-r from-teal-500 to-cyan-500 text-white'
             : 'text-gray-600 dark:text-gray-400'
             }`}
         >
-          <span className="inline-block">알림</span>
+          알림
           {unreadCount > 0 && (
             <span className="absolute top-1 right-6 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
               {unreadCount}
@@ -211,6 +498,7 @@ export default function MyPage({ user, onLogout, onNavigate, onUpdateUser }: MyP
         </button>
       </div>
 
+      {/* ---------------- PROFILE ---------------- */}
       <AnimatePresence mode="wait">
         {activeSection === 'profile' ? (
           <motion.div
@@ -220,241 +508,24 @@ export default function MyPage({ user, onLogout, onNavigate, onUpdateUser }: MyP
             exit={{ opacity: 0, x: 20 }}
             className="space-y-4"
           >
-            {/* 프로필 카드 */}
-            <div
-              className="bg-gradient-to-br from-teal-500 via-cyan-500 to-sky-600 rounded-2xl p-6 text-white shadow-2xl"
-              style={{
-                background: typeof window !== 'undefined' && document.documentElement.classList.contains('dark')
-                  ? 'linear-gradient(135deg, rgba(20, 233, 210, 0.40) 0%, rgba(36, 220, 255, 0.40) 50%, rgba(56, 182, 255, 0.40) 100%)'
-                  : undefined
-              }}
-            >
-              <div className="flex flex-col items-center ">
-                {isEditingProfile ? (
-                  <motion.div
-                    key={editedUser?.team?.id}
-                    initial={{ scale: 0.9, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{ duration: 0.3 }}
-                    className="relative"
-                  >
-                    <TeamAvatar
-                      key={`${editedUser?.team?.id}-${editedUser?.avatar || ''}`} // ✅ team+avatar 조합으로 완전한 고유값
-                      team={editedUser?.team?.name}
-                      src={editedUser?.avatar}
-                      size="xl"
-                      className="border-4 border-white"
-                    />
-                    <label className="absolute bottom-0 right-0 bg-white text-teal-700 rounded-full p-2 cursor-pointer hover:bg-teal-50 transition-colors">
-                      <Camera className="w-4 h-4" />
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleImageUpload}
-                        className="hidden"
-                      />
-                    </label>
-                  </motion.div>
-                ) : (
-
-                  <TeamAvatar
-                    team={team?.name}
-                    src={user?.avatar}
-                    size="xl"
-                    className="border-4 border-white mb-4"
-                  />
-                )}
-                {/* 팀 로고 출력 */}
-                {team && (
-                  <div className="mt-3 bg-white/20 backdrop-blur-sm rounded-full px-4 py-2 flex items-center gap-2">
-                    <TeamLogo team={team.id} size="md" />
-                    <span className="text-white">{team.name}</span>
-                  </div>
-                )}
-                <h2 className="text-white mb-1 mt-4">{user?.username || '사용자'}</h2>
-                <p className="text-white/80">@{user?.username || 'username'}</p>
-
-                {isEditingProfile ? (
-                  <div className="mt-3 w-full max-w-xs border-t border-white/20 py-3">
-                    <label className="block text-white/80 text-sm mb-2">응원 구단</label>
-                    <div className="relative">
-                      <select
-                        value={editedUser?.teamId || ''}
-                        onChange={(e) =>
-                          setEditedUser((prev) => ({
-                            ...prev,
-                            teamId: e.target.value, // ✅ teamId 문자열로 저장
-                          }))
-                        }
-                        className="w-full bg-white/20 text-white rounded-xl pl-4 pr-10 py-2 border border-white/30 focus:outline-none focus:ring-2 focus:ring-white/50 appearance-none"
-                      >
-                        {KBO_TEAMS.map((team) => (
-                          <option key={team.id} value={team.id} className="text-gray-900">
-                            {team.name}
-                          </option>
-                        ))}
-                      </select>
-                      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/70 pointer-events-none" />
-                    </div>
-                  </div>
-                ) :
-                  null
+            <style>
+              {`
+                /* Reorder 드래그 플레이스홀더 스타일 */
+                [data-framer-component-type="Reorder.Group"] > * {
+                  margin-bottom: 1rem;
                 }
-
-                {isEditingProfile ? (
-                  <div className="mt-3 w-full max-w-xs border-t border-white/20 pt-3 py-3">
-                    <label className="block text-white/80 text-sm mb-2">소개</label>
-                    <textarea
-                      value={editedUser?.bio || ''}
-                      onChange={(e) => setEditedUser({ ...editedUser, bio: e.target.value })}
-                      placeholder="자신을 소개해주세요"
-                      rows={3}
-                      className="w-full bg-white/20 text-white rounded-xl px-4 py-2 border border-white/30 focus:outline-none focus:ring-2 focus:ring-white/50 placeholder:text-white/50 resize-none"
-                    />
-                  </div>
-                ) : (
-                  <p className="text-white/90 text-center mt-3 text-sm">
-                    {user?.bio || 'KBO를 사랑하는 열정적인 야구팬입니다! ⚾'}
-                  </p>
-                )}
-
-                {/* 프로필 수정 버튼 */}
-                <div className="mt-4 flex gap-2 justify-center">
-                  {isEditingProfile ? (
-                    <>
-                      <motion.button
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => {
-                          setIsEditingProfile(false);
-                          setEditedUser({ ...user, bio: user.bio || '' });
-                          setNewProfileImage(null);
-                        }}
-                        className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-xl transition-colors text-white"
-                      >
-                        취소
-                      </motion.button>
-                      <motion.button
-                        whileTap={{ scale: 0.95 }}
-                        onClick={handleSaveProfile}
-                        className="px-4 py-2 bg-white hover:bg-white/90 text-teal-700 dark:text-teal-700 rounded-xl transition-colors flex items-center gap-2"
-                      >
-                        <Check className="w-4 h-4" />
-                        저장
-                      </motion.button>
-                    </>
-                  ) : (
-                    <motion.button
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => {
-                        setEditedUser({ ...user, bio: user.bio || '' });
-                        setIsEditingProfile(true);
-                      }}
-                      className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-xl transition-colors flex items-center gap-2 text-white"
-                    >
-                      <Edit2 className="w-4 h-4" />
-                      프로필 수정
-                    </motion.button>
-                  )}
-                </div>
-              </div>
-
-              {/* 통계 */}
-              <div className="grid grid-cols-3 gap-4 mt-6 pt-6 border-t border-white/20">
-                {
-                  stats.map((stat, index) => {
-                    const Icon = stat.icon;
-                    return (
-                      <motion.div
-                        key={stat.label}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.2 + index * 0.1 }}
-                        className="text-center"
-                      >
-                        <Icon className="w-5 h-5 mx-auto mb-2 text-white" />
-                        <div className="text-xl text-white mb-1">{stat.value}</div>
-                        <p className="text-xs text-white/80">{stat.label}</p>
-                      </motion.div>
-                    );
-                  })}
-              </div>
-            </div>
-
-            {/* 메뉴 */}
-            <div className="glass-card rounded-2xl overflow-hidden border border-teal-100/50 dark:border-[#00d5be]/20">
-              {/* ✅ 내 구단 투표 보기 */}
-              <button
-                onClick={() => {
-                  localStorage.setItem("selectedTeamForPolls", JSON.stringify(team));
-                  onNavigate("polls");
-                }}
-                className="w-full flex items-center gap-3 px-4 py-3 hover:bg-teal-50 dark:hover:bg-[#00d5be]/10 transition-all border-b border-gray-100 dark:border-gray-700/50"
-              >
-                <div className="w-10 h-10 rounded-full bg-teal-100 dark:bg-[#00d5be]/20 flex items-center justify-center">
-                  <TrendingUp className="w-5 h-5 text-teal-600 dark:text-[#00d5be]" />
-                </div>
-                <span className="text-gray-900 dark:text-gray-100">내 구단 투표 보기</span>
-              </button>
-
-              {/* 로그아웃 */}
-              <button
-                onClick={onLogout}
-                className="w-full flex items-center gap-3 px-4 py-3 hover:bg-teal-50 dark:hover:bg-[#00d5be]/10 transition-all"
-              >
-                <div className="w-10 h-10 rounded-full bg-rose-100 dark:bg-rose-900/30 flex items-center justify-center">
-                  <LogOut className="w-5 h-5 text-rose-600 dark:text-rose-400" />
-                </div>
-                <span className="text-gray-900 dark:text-gray-100">로그아웃</span>
-              </button>
-            </div>
-
-
-            {/* 배지 */}
-            <div className="glass-card rounded-2xl p-5 border border-teal-100/50 dark:border-[#00d5be]/20">
-              <h3 className="text-gray-900 dark:text-gray-100 mb-4 font-medium">내 배지</h3>
-              <div className="grid grid-cols-4 gap-3">
-                {['⚾', '🏆', '⭐', '🔥', '👑', '💪', '🎯', '⚡'].map((badge, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, scale: 0 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.4 + index * 0.05 }}
-                    whileTap={{ scale: 0.9 }}
-                    className="aspect-square bg-gradient-to-br from-teal-100 to-cyan-100 dark:from-[#00d5be]/20 dark:to-[#00b8db]/20 rounded-xl flex items-center justify-center text-2xl cursor-pointer"
-                  >
-                    {badge}
-                  </motion.div>
-                ))}
-              </div>
-            </div>
-
-            {/* 레벨 진행바 */}
-            <div className="bg-gradient-to-br from-teal-50 to-cyan-50 dark:from-[#00d5be]/10 dark:to-[#00b8db]/10 rounded-2xl p-5 shadow-sm border border-teal-200 dark:border-[#00d5be]/30">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-gray-900 dark:text-gray-100 flex items-center gap-2 font-medium">
-                  <Zap className="w-5 h-5 text-teal-500 dark:text-[#00d5be]" />
-                  레벨 {level}
-                </h3>
-                <span className="text-sm text-gray-600 dark:text-gray-400">{progress}%</span>
-              </div>
-
-              {/* XP 진행바 */}
-              <div className="h-2.5 bg-gray-200 dark:bg-gray-700/50 rounded-full overflow-hidden">
-                <motion.div
-                  key={xp} // XP 변동 시 애니메이션 갱신
-                  initial={{ width: 0 }}
-                  animate={{ width: `${progress}%` }}
-                  transition={{ delay: 0.2, duration: 0.8, ease: "easeOut" }}
-                  className="h-full bg-gradient-to-r from-teal-400 to-cyan-500 dark:from-[#00d5be] dark:to-[#00b8db] rounded-full"
-                />
-              </div>
-
-              <p className="text-sm text-gray-600 dark:text-gray-400 mt-3">
-                다음 레벨까지 {toNext} XP 남음 (총 {xp} XP)
-              </p>
-            </div>
+              `}
+            </style>
+            <Reorder.Group axis="y" values={widgetOrder} onReorder={setWidgetOrder} className="space-y-4">
+              {widgetOrder.map((widgetType) => (
+                <DraggableWidget key={widgetType} widgetType={widgetType} setIsDragging={setIsDragging} isBadgeDragging={isBadgeDragging} >
+                  {renderWidget(widgetType)}
+                </DraggableWidget>
+              ))}
+            </Reorder.Group>
           </motion.div>
         ) : (
+          /* ---------------- 알림 페이지 ---------------- */
           <motion.div
             key="notifications"
             initial={{ opacity: 0, x: 20 }}
@@ -462,18 +533,21 @@ export default function MyPage({ user, onLogout, onNavigate, onUpdateUser }: MyP
             exit={{ opacity: 0, x: -20 }}
             className="space-y-4"
           >
-            {/* 헤더 */}
             <div className="flex items-center justify-between">
-              <h2 className="text-gray-900 dark:text-gray-100">알림</h2>
+              <h2>알림</h2>
               <button
-                onClick={markAllAsRead}
-                className="text-teal-600 dark:text-[#00d5be] hover:underline"
+                onClick={
+                  (e) => {
+                    if (isDragging) return e.stopPropagation();
+                    markAllAsRead()
+                  }
+                }
+                className="text-teal-600 hover:underline"
               >
                 모두 읽음
               </button>
             </div>
 
-            {/* 알림 목록 */}
             <div className="space-y-2">
               <AnimatePresence>
                 {notifications.map((notif, index) => (
@@ -481,61 +555,47 @@ export default function MyPage({ user, onLogout, onNavigate, onUpdateUser }: MyP
                     key={notif.id}
                     initial={{ opacity: 0, x: -50 }}
                     animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: 100, height: 0, marginBottom: 0 }}
-                    transition={{ delay: index * 0.05 }}
+                    exit={{ opacity: 0, x: 100, height: 0 }}
                     onClick={() => markAsRead(notif.id)}
-                    className={`flex items-start gap-3 p-4 rounded-xl cursor-pointer transition-all relative overflow-hidden border touch-manipulation ${notif.read
-                      ? 'glass-card border-gray-200/50 dark:border-gray-700/30'
-                      : 'glass-card border-teal-200/70 dark:border-[#00d5be]/30 bg-gradient-to-r from-teal-50/30 to-cyan-50/30 dark:from-[#00d5be]/5 dark:to-[#00b8db]/5'
+                    className={`flex items-start gap-3 p-4 rounded-xl cursor-pointer border ${notif.read
+                      ? 'glass-card'
+                      : 'bg-gradient-to-r from-teal-50 to-cyan-50'
                       }`}
-                    style={{ WebkitTapHighlightColor: 'transparent' }}
                   >
                     <img
                       src={notif.avatar}
-                      alt={notif.user}
-                      className="w-11 h-11 rounded-full flex-shrink-0 ring-2 ring-teal-200 dark:ring-[#00d5be]/30"
+                      className="w-11 h-11 rounded-full ring-2 ring-teal-200"
                     />
 
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start gap-2 mb-1">
-                        <p className="text-sm text-gray-900 dark:text-gray-100 flex-1">
-                          <span className="font-medium">{notif.user}</span>
-                          <span className="text-gray-600 dark:text-gray-400">
-                            {' '}
-                            {notif.message}
-                          </span>
-                        </p>
-                        <div className="flex-shrink-0">
-                          {getIcon(notif.type)}
-                        </div>
-                      </div>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        {notif.timestamp}
+                    <div className="flex-1">
+                      <p className="text-sm">
+                        <span className="font-medium">{notif.user}</span>
+                        <span className="text-gray-600"> {notif.message}</span>
                       </p>
+                      <p className="text-xs text-gray-500">{notif.timestamp}</p>
                     </div>
 
                     {!notif.read && (
-                      <div className="w-2 h-2 bg-teal-600 dark:bg-[#00d5be] rounded-full flex-shrink-0 mt-2" />
+                      <div className="w-2 h-2 bg-teal-600 rounded-full mt-2" />
                     )}
 
-                    {/* 삭제 버튼 */}
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         dismissNotification(notif.id);
                       }}
-                      className="p-1.5 bg-red-100 dark:bg-red-900/30 hover:bg-red-200 dark:hover:bg-red-900/50 rounded-full transition-colors touch-manipulation flex-shrink-0"
+                      className="p-1.5 bg-red-100 rounded-full"
                     >
-                      <X className="w-3.5 h-3.5 text-red-600 dark:text-red-400" />
+                      <X className="w-3.5 h-3.5 text-red-600" />
                     </button>
                   </motion.div>
                 ))}
               </AnimatePresence>
 
               {notifications.length === 0 && (
-                <div className="text-center py-16 text-gray-400 dark:text-gray-500">
+                <div className="text-center py-16 text-gray-400">
                   <div className="text-5xl mb-3">🔔</div>
-                  <p className="text-sm">알림이 없습니다</p>
+                  <p>알림이 없습니다</p>
                 </div>
               )}
             </div>

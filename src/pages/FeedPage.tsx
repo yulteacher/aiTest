@@ -30,7 +30,6 @@ export default function FeedPage({ onPostClick }) {
 
   /* 🗑 삭제 */
   const handleDelete = (postId: string) => {
-    if (!window.confirm("이 게시글을 삭제하시겠습니까?")) return;
     deletePost(postId);
     toast.success("게시글이 삭제되었습니다!");
   };

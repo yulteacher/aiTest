@@ -7,6 +7,7 @@ import TeamLogo from '../components/yului/TeamLogo';
 import AnimatedButton from '../components/yului/AnimatedButton';
 import type { User } from "../types/interfaces";
 import { useAppDataContext } from "../context/AppDataContext";
+import { useBadgeSystem } from "../hooks/useBadgeSystem";
 
 export default function SignUpPage({ onSignup, navigateTo }) {
     const { setCurrentUser } = useAppDataContext();
@@ -18,7 +19,14 @@ export default function SignUpPage({ onSignup, navigateTo }) {
     const [error, setError] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isVerified, setIsVerified] = useState(false); // ✅ 중복확인 통과 여부
-
+    const { checkInitialBadges } = useBadgeSystem();
+    const initialBadges = [
+        "join_1",
+        "level_1",
+        "comment_1",
+        "feed_1",
+        "vote_1",
+    ];
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
@@ -119,7 +127,11 @@ export default function SignUpPage({ onSignup, navigateTo }) {
 
             xp: 0,
             level: 1,
-            badges: ["welcome_1"],
+            badges: initialBadges,
+            equippedBadges: {
+                main: "join_1",
+                slots: ["level_1", "comment_1", "feed_1", "vote_1"],
+            },
 
             joinedAt: new Date().toISOString(),
 
@@ -134,9 +146,12 @@ export default function SignUpPage({ onSignup, navigateTo }) {
 
         setCurrentUser(newUser);
 
+
         // ✅ 3️⃣ 상태 업데이트 (App으로 user 전달)
         toast.success(`${newUser.username}님, 가입을 환영합니다 🎉`);
         onSignup(newUser);
+
+
 
         // ✅ 바로 홈으로 이동
         navigateTo("home");
@@ -227,8 +242,8 @@ export default function SignUpPage({ onSignup, navigateTo }) {
                         />
                     ) : (
                         // ✅ 아무것도 없을 때 기본 영역
-                        <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center text-white text-sm">
-                            없음
+                        <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center text-white/50">
+                            <UserPlus className="w-8 h-8" />
                         </div>
                     )}
 

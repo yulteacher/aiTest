@@ -3,7 +3,7 @@
 // ==========================================
 import { KBO_TEAMS } from "../data/constants/teams";
 import type { User, Post, Poll, Comment } from "../types/interfaces";
-
+import { BADGES } from "./badges";
 export function generateDummyData() {
     console.log("🎯 generateDummyData 실행됨");
 
@@ -68,6 +68,10 @@ export function generateDummyData() {
         joinedAt: new Date().toISOString(),
         badges: [],
         bio: "FANBASE 시스템 관리자 ⚾",
+        equippedBadges: {
+            main: null,
+            slots: [null, null, null, null]
+        }
     };
 
     users.push(admin);

@@ -145,6 +145,12 @@ export default function MainApp() {
             );
     }
 
+    const handleLogout = () => {
+        localStorage.removeItem("currentUser");
+        // localStorage.clear(); // 🔥 데이터 유지를 위해 전체 초기화 제거
+        window.location.reload();
+    };
+
     const renderPage = () => {
         if (selectedPostId)
             return <PostDetailPage postId={selectedPostId} onBack={() => setSelectedPostId(null)} />;
@@ -166,7 +172,7 @@ export default function MainApp() {
                     window.history.pushState({ pollId: id }, '', `#poll/${id}`);
                 }} />;
             case 'mypage':
-                return <MyPage user={currentUser} onLogout={() => setCurrentUser(null)} onNavigate={setActiveTab} />;
+                return <MyPage onLogout={handleLogout} onNavigate={setActiveTab} />;
             case 'test':
                 return <TestGrid />;
             default:
@@ -177,8 +183,30 @@ export default function MainApp() {
     return (
         <div className="min-h-screen transition-colors relative">
             {/* LiquidEther 배경 */}
-            <LiquidEther colors={['#5227FF', '#FF9FFC', '#B19EEF']} cursorSize={100} />
-
+            <div style={{ width: '100%', height: '100vh', position: 'fixed' }}>
+                <LiquidEther
+                    colors={['#5227FF', '#FF9FFC', '#B19EEF']}
+                    mouseForce={20}
+                    cursorSize={100}
+                    isViscous={false}
+                    viscous={30}
+                    iterationsViscous={32}
+                    iterationsPoisson={32}
+                    resolution={0.5}
+                    isBounce={false}
+                    autoDemo={true}
+                    autoSpeed={0.5}
+                    autoIntensity={2.2}
+                    takeoverDuration={0.25}
+                    autoResumeDelay={3000}
+                    autoRampDuration={0.6}
+                />
+            </div>
+            {/* 배경 그라디언트 */}
+            <div className="fixed inset-0 pointer-events-none overflow-hidden opacity-40 dark:opacity-30">
+                <div className="absolute -top-1/2 -left-1/2 w-full h-full bg-gradient-to-br from-teal-400/20 to-cyan-400/20 dark:from-teal-400/30 dark:to-cyan-400/30 rounded-full blur-3xl" />
+                <div className="absolute -bottom-1/2 -right-1/2 w-full h-full bg-gradient-to-tl from-cyan-400/20 to-sky-400/20 dark:from-cyan-400/30 dark:to-teal-400/30 rounded-full blur-3xl" />
+            </div>
             {/* 헤더 */}
             <motion.header className="fixed top-0 left-0 right-0 bg-white/80 dark:bg-[#1d293d]/80 backdrop-blur-xl border-b border-teal-200/50 dark:border-[#00d5be]/30 z-50 shadow-sm">
                 <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
@@ -189,7 +217,7 @@ export default function MainApp() {
                                     if (selectedPostId || selectedPollId) window.history.back();
                                     else setActiveTab('home');
                                 }}
-                                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
+                                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors cursor-pointer"
                                 whileHover={{ scale: 1.1 }}
                                 whileTap={{ scale: 0.9 }}
                             >

@@ -28,8 +28,8 @@ export const initLocalData = () => {
             teamId: adminTeam?.id,
             team: adminTeam,
             avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=Admin`,
-            xp: 3500,
-            level: 5,
+            xp: 550,  // 10 posts (200) + 20 comments (200) + 8 votes (120) + 3 logins (30)
+            level: 6, // 550 XP / 100 + 1
             badges: [],
             joinedAt: new Date().toISOString(),
 
@@ -40,6 +40,10 @@ export const initLocalData = () => {
             loginDays: 3,
 
             bio: "시스템 관리자 ⚾",
+            equippedBadges: {
+                main: null,
+                slots: [null, null, null, null]
+            }
         };
 
         users.push(adminUser);

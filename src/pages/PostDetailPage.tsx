@@ -6,6 +6,7 @@ import TeamLogo from '../components/yului/TeamLogo';
 import TeamAvatar from '../components/yului/TeamAvatar';
 import { ImageWithFallback } from '../components/figma/ImageWithFallback';
 import { useAppDataContext } from "../context/AppDataContext";
+import { useXPSystem } from "../hooks/useXPSystem";
 
 interface PostDetailPageProps {
   postId: string | null;
@@ -24,6 +25,8 @@ export default function PostDetailPage({ postId, onBack }: PostDetailPageProps) 
     updateComment,
     deleteComment,
   } = useAppDataContext();
+
+  const { addXP } = useXPSystem();
 
   const [localPost, setLocalPost] = useState<any>(null);
   const [localPosts, setLocalPosts] = useState<any[]>([]);
@@ -47,24 +50,42 @@ export default function PostDetailPage({ postId, onBack }: PostDetailPageProps) 
     if (found) {
       setEditPostContent(found.content);
     }
+  }, [postId]);
+
+  useEffect(() => {
+    const found = contextPosts.find((p) => p.id === postId);
+    if (found) {
+      setLocalPost(found);
+    }
   }, [contextPosts, postId]);
-
-
   // ----------------------------
   // 좋아요
   // ----------------------------
+
+  const isLiked = (localPost?.likedUserIds || []).includes(currentUser?.id || "");
+
   const handleLike = () => {
     if (!localPost) return;
+    if (!currentUser) return toast.error("로그인이 필요합니다!");
+
+    const currentLikedUserIds = localPost.likedUserIds || [];
+    const currentLiked = currentLikedUserIds.includes(currentUser.id);
+    const newLikedUserIds = currentLiked
+      ? currentLikedUserIds.filter((id: string) => id !== currentUser.id)
+      : [...currentLikedUserIds, currentUser.id];
 
     const updated = {
       ...localPost,
-      isLiked: !localPost.isLiked,
-      likes: localPost.isLiked ? localPost.likes - 1 : localPost.likes + 1,
+      likedUserIds: newLikedUserIds,
+      likes: currentLiked ? localPost.likes - 1 : localPost.likes + 1,
+      isLiked: !currentLiked, // deprecated
     };
 
     updatePost(updated);
     setLocalPost(updated);
   };
+
+
 
 
   // ----------------------------
@@ -83,6 +104,9 @@ export default function PostDetailPage({ postId, onBack }: PostDetailPageProps) 
     };
 
     addComment(localPost.id, newCommentObj);
+
+    // ⭐ 댓글 작성 XP 지급
+    addXP("commentCreated");
 
     setNewComment("");
     toast.success("댓글 작성 완료!");
@@ -161,13 +185,11 @@ export default function PostDetailPage({ postId, onBack }: PostDetailPageProps) 
   };
 
 
-  if (!localPost) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p>게시글이 없습니다.</p>
-      </div>
-    );
-  }
+  // 뒤로가기 눌러 postId 없어지면 DetailPage 아예 렌더 안 함
+  if (!postId) return null;
+
+  // context 업데이트 중일 때 깜빡임 방지
+  if (!localPost) return null;
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20">
@@ -182,7 +204,13 @@ export default function PostDetailPage({ postId, onBack }: PostDetailPageProps) 
               <p className="font-medium">{localPost.author}</p>
               <span className="text-sm text-gray-500">{localPost.timestamp}</span>
             </div>
-
+            {/* 팀 정보 (PostCard와 동일) */}
+            {localPost.team && (
+              <div className="flex items-center gap-2 mb-3">
+                <TeamLogo team={localPost.team} size="sm" />
+                <span className="text-sm text-gray-500">{localPost.team.name}</span>
+              </div>
+            )}
             {/* 수정 삭제 버튼 */}
             {localPost.author === currentUser?.username && (
               <div className="flex gap-2">
@@ -221,8 +249,14 @@ export default function PostDetailPage({ postId, onBack }: PostDetailPageProps) 
 
           {/* 🧡 좋아요 댓글 */}
           <div className="flex items-center gap-6 border-t pt-3">
-            <button onClick={handleLike} className="flex items-center gap-2">
-              <Heart className="w-5" fill={localPost.isLiked ? "currentColor" : "none"} />
+            <button
+              onClick={handleLike}
+              className={`flex items-center gap-2 ${isLiked ? "text-rose-500" : "text-gray-600 dark:text-gray-400"}`}
+            >
+              <Heart
+                className="w-5"
+                fill={isLiked ? "currentColor" : "none"}
+              />
               {localPost.likes}
             </button>
 
@@ -241,21 +275,26 @@ export default function PostDetailPage({ postId, onBack }: PostDetailPageProps) 
           {/* 입력 */}
           <div className="flex gap-2 mb-6">
             <input
-              className="flex-1 p-3 bg-gray-100 rounded-xl"
+              className="flex-1 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-slate-500"
               placeholder="댓글 작성..."
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleAddComment()}
             />
-            <button onClick={handleAddComment} className="p-3 bg-slate-600 text-white rounded-xl">
-              <Send />
-            </button>
+            <motion.button
+              whileTap={{ scale: 0.9 }}
+              onClick={handleAddComment}
+              disabled={!newComment.trim()}
+              className="p-3 bg-slate-600 text-white rounded-sm hover:bg-slate-700 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Send className="w-5 h-5" />
+            </motion.button>
           </div>
 
           {/* 댓글 */}
           <div className="space-y-4">
             {localPost.commentsList?.map((comment) => (
-              <motion.div key={comment.id} className="bg-gray-100 p-4 rounded-xl">
+              <motion.div key={comment.id} className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4">
 
                 {editingComment === comment.id ? (
                   <>

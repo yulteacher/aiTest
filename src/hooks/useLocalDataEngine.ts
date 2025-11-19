@@ -2,34 +2,19 @@
 import { useState, useEffect } from "react";
 import { generateDummyData } from "../data/generateDummy";
 import type { User, Post, Poll, Comment } from "../types/interfaces";
+import { loadUser } from "../context/AppDataContext";
 
-export function useLocalDataEngine(): {
-    currentUser: User | null;
-    setCurrentUser: React.Dispatch<React.SetStateAction<User | null>>;
-
-    users: User[];
-    posts: Post[];
-    polls: Poll[];
-
-    addPost: (post: Post) => void;
-    updatePost: (post: Post) => void;
-    deletePost: (postId: string) => void;
-
-    addComment: (postId: string, comment: Comment) => void;
-    updateComment: (postId: string, commentId: string, updatedComment: Comment) => void;
-    deleteComment: (postId: string, commentId: string) => void;
-
-    addPoll: (poll: Poll) => void;
-    updatePoll: (poll: Poll) => void;
-    deletePoll: (pollId: string) => void;
-} {
-    const [currentUser, setCurrentUser] = useState<User | null>(null);
+export function useLocalDataEngine() {
+    const [currentUser, setCurrentUserRaw] = useState<User | null>(null);
     const [users, setUsers] = useState<User[]>([]);
     const [posts, setPosts] = useState<Post[]>([]);
     const [polls, setPolls] = useState<Poll[]>([]);
 
-    /* 최초 로드 */
+    /* ----------------------------------------------
+     * 🚀 초기 로드 : data + 전체 유저 loadUser 보정
+     * ---------------------------------------------- */
     useEffect(() => {
+        // dummy 초기화
         if (!localStorage.getItem("users")) {
             const { users, posts, polls } = generateDummyData();
             localStorage.setItem("users", JSON.stringify(users));
@@ -37,25 +22,66 @@ export function useLocalDataEngine(): {
             localStorage.setItem("polls", JSON.stringify(polls));
         }
 
-        setUsers(JSON.parse(localStorage.getItem("users") || "[]"));
+        // users → loadUser 적용
+        const loadedUsers = JSON.parse(localStorage.getItem("users") || "[]")
+            .map(loadUser);
+        setUsers(loadedUsers);
+
+        // posts/polls는 loadUser로 보정된 사용자 데이터 기준으로 reload해야 함
         setPosts(JSON.parse(localStorage.getItem("posts") || "[]"));
         setPolls(JSON.parse(localStorage.getItem("polls") || "[]"));
 
+        // currentUser load
         const saved = localStorage.getItem("currentUser");
-        if (saved) setCurrentUser(JSON.parse(saved));
+        if (saved) setCurrentUserRaw(loadUser(JSON.parse(saved)));
     }, []);
 
+    /* ----------------------------------------------
+     * 🛠 공용 저장 함수
+     * ---------------------------------------------- */
     const save = (key: string, value: any) =>
         localStorage.setItem(key, JSON.stringify(value));
 
-    /* -------------------------
-     * 📝 POST CRUD
-     * ------------------------- */
+    /* ----------------------------------------------
+     * 🔥 currentUser setter (강력 보정)
+     * ---------------------------------------------- */
+    const setCurrentUser = (u: User | null) => {
+        if (!u) {
+            setCurrentUserRaw(null);
+            localStorage.removeItem("currentUser");
+            return;
+        }
 
+        const fixed = loadUser(u);
+
+        setCurrentUserRaw(fixed);
+        save("currentUser", fixed);
+
+        // users 배열 자동 업데이트
+        setUsers(prev => {
+            const updated = prev.map(user =>
+                user.id === fixed.id ? fixed : user
+            );
+            save("users", updated);
+            return updated;
+        });
+    };
+
+    /* ----------------------------------------------
+     * 📝 POST CRUD (+ feedCount 증가)
+     * ---------------------------------------------- */
     const addPost = (post: Post) => {
         const updated = [post, ...posts];
         setPosts(updated);
         save("posts", updated);
+
+        // ⭐ feedCount 증가 → 유저 업데이트
+        if (currentUser) {
+            setCurrentUser({
+                ...currentUser,
+                feedCount: (currentUser.feedCount ?? 0) + 1,
+            });
+        }
     };
 
     const updatePost = (updatedPost: Post) => {
@@ -72,10 +98,9 @@ export function useLocalDataEngine(): {
         save("posts", updated);
     };
 
-    /* -------------------------
-     * 💬 COMMENT CRUD
-     * ------------------------- */
-
+    /* ----------------------------------------------
+     * 💬 COMMENT CRUD (+ commentCount 증가)
+     * ---------------------------------------------- */
     const addComment = (postId: string, comment: Comment) => {
         const updated = posts.map((p) =>
             p.id === postId
@@ -84,27 +109,30 @@ export function useLocalDataEngine(): {
         );
         setPosts(updated);
         save("posts", updated);
+
+        // ⭐ commentCount 증가
+        if (currentUser) {
+            setCurrentUser({
+                ...currentUser,
+                commentCount: (currentUser.commentCount ?? 0) + 1,
+            });
+        }
     };
 
-    const updateComment = (
-        postId: string,
-        commentId: string,
-        updatedComment: Comment
-    ) => {
-        setPosts(prev =>
-            prev.map(post =>
-                post.id === postId
-                    ? {
-                        ...post,
-                        commentsList: post.commentsList?.map(c =>
-                            c.id === commentId ? { ...c, ...updatedComment } : c
-                        ),
-                    }
-                    : post
-            )
+    const updateComment = (postId: string, commentId: string, updatedComment: Comment) => {
+        const updated = posts.map(post =>
+            post.id === postId
+                ? {
+                    ...post,
+                    commentsList: post.commentsList?.map(c =>
+                        c.id === commentId ? { ...c, ...updatedComment } : c
+                    ),
+                }
+                : post
         );
+        setPosts(updated);
+        save("posts", updated);
     };
-
 
     const deleteComment = (postId: string, commentId: string) => {
         const updated = posts.map((p) =>
@@ -119,10 +147,9 @@ export function useLocalDataEngine(): {
         save("posts", updated);
     };
 
-    /* -------------------------
-     * 🗳 POLL CRUD
-     * ------------------------- */
-
+    /* ----------------------------------------------
+     * 🗳 POLL CRUD (+ voteCount 증가)
+     * ---------------------------------------------- */
     const addPoll = (poll: Poll) => {
         const updated = [poll, ...polls];
         setPolls(updated);
@@ -143,6 +170,9 @@ export function useLocalDataEngine(): {
         save("polls", updated);
     };
 
+    /* ----------------------------------------------
+     * 🏁 반환
+     * ---------------------------------------------- */
     return {
         currentUser,
         setCurrentUser,

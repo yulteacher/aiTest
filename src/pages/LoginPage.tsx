@@ -4,14 +4,17 @@ import { LogIn, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import AnimatedButton from '../components/yului/AnimatedButton';
 import Iridescence from '../components/reactbits/Iridescence';
-import { useAppDataContext } from "../context/AppDataContext";
+import { useAppDataContext, loadUser } from "../context/AppDataContext";
+import { useBadgeSystem } from "../hooks/useBadgeSystem";
+import { useXPSystem } from "../hooks/useXPSystem";
 
 export default function LoginPage({ onLogin, navigateTo }) {
   const { setCurrentUser } = useAppDataContext();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-
+  const { checkInitialBadges } = useBadgeSystem();
+  const { addXP } = useXPSystem();
   const handleLogin = () => {
     setError('');
 
@@ -33,8 +36,15 @@ export default function LoginPage({ onLogin, navigateTo }) {
       return;
     }
 
-    localStorage.setItem("currentUser", JSON.stringify(foundUser));
-    setCurrentUser(foundUser);     // 🔥 필수! MainApp에 로그인 전달
+    localStorage.setItem("currentUser", JSON.stringify(loadUser(foundUser)));
+    setCurrentUser(loadUser(foundUser));
+
+    // ⭐ 로그인 XP 지급
+    addXP("login");
+
+    // ⭐ 최초 5개 기본 뱃지 지급
+    checkInitialBadges();
+
     toast.success(`${foundUser.username}님, 환영합니다 🎉`);
     onLogin(foundUser);
     navigateTo("home");

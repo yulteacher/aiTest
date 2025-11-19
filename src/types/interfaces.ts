@@ -76,6 +76,10 @@ export interface User {
 
   bio?: string;
   badges?: string[];
+  equippedBadges?: {
+    main: string | null;
+    slots: (string | null)[];
+  };
 }
 
 // -----------------------------------------------------
@@ -109,8 +113,9 @@ export interface Post {
 
   // 좋아요
   likes: number;
-  liked?: boolean;          // ⭐ FeedPage 필수
-  isLiked?: boolean;        // 다른 페이지 호환
+  liked?: boolean;          // ⭐ FeedPage 필수 (deprecated)
+  isLiked?: boolean;        // 다른 페이지 호환 (deprecated)
+  likedUserIds?: string[];  // ⭐ 좋아요 동기화용 (New)
 
   // 댓글
   comments?: number;        // ⭐ FeedPage 필수 (갯수만)

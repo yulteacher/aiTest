@@ -1,7 +1,8 @@
 import { useAppDataContext } from "../context/AppDataContext";
+import { useBadgeSystem } from "./useBadgeSystem";
 
 /* ================================
-   🎁 XP 지급 규칙 정의
+   🎁 XP 지급 규칙
 ================================ */
 const XP_RULES: Record<
   "login" | "postCreated" | "commentCreated" | "pollVoted",
@@ -15,6 +16,7 @@ const XP_RULES: Record<
 
 export const useXPSystem = () => {
   const { currentUser, setCurrentUser } = useAppDataContext();
+  const { checkAllBadges } = useBadgeSystem();
 
   /* ================================
      🔥 레벨 / 진행도 계산
@@ -32,7 +34,7 @@ export const useXPSystem = () => {
   };
 
   /* ================================
-     ⭐ 이벤트 기반 XP 지급
+     ⭐ XP 지급 + 레벨 업데이트
   ================================= */
   const addXP = (
     event: "login" | "postCreated" | "commentCreated" | "pollVoted"
@@ -41,21 +43,32 @@ export const useXPSystem = () => {
 
     const amount = XP_RULES[event] ?? 0;
 
+    const newXP = (currentUser.xp ?? 0) + amount;
+    const newLevel = Math.floor(newXP / 100) + 1;
+
     const updatedUser = {
       ...currentUser,
-      xp: (currentUser.xp ?? 0) + amount,
+      xp: newXP,
+      level: newLevel, // ⭐ 레벨 갱신 매우 중요!
     };
 
+    // ----------------------------------
     // 저장
+    // ----------------------------------
     setCurrentUser(updatedUser);
     localStorage.setItem("currentUser", JSON.stringify(updatedUser));
 
-    // users 배열 업데이트
+    // 전체 users 업데이트
     const users = JSON.parse(localStorage.getItem("users") || "[]");
     const updatedUsers = users.map((u: any) =>
       u.id === updatedUser.id ? updatedUser : u
     );
     localStorage.setItem("users", JSON.stringify(updatedUsers));
+
+    // ----------------------------------
+    // 🎖 XP로 인한 레벨업 → 배지 재검사
+    // ----------------------------------
+    checkAllBadges();
   };
 
   return { getLevelInfo, addXP };

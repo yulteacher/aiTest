@@ -5,6 +5,7 @@ import TeamSelector from '../components/TeamSelector';
 import TeamLogo from '../components/yului/TeamLogo';
 import { toast } from 'sonner';
 import { useAppDataContext } from "../context/AppDataContext";
+import { useXPSystem } from "../hooks/useXPSystem";
 
 function AnimatedCount({ value }) {
   const count = useMotionValue(0);
@@ -36,6 +37,7 @@ export default function PollsPage({ onPollClick }) {
   const [selectedTeam, setSelectedTeam] = useState(null);
   const [selectedPollId, setSelectedPollId] = useState(null);
   const { currentUser } = useAppDataContext(); // ✅ Context에서 최신 사용자 정보
+  const { addXP } = useXPSystem();
 
   // ✅ 데이터 불러오기
   useEffect(() => {
@@ -83,6 +85,12 @@ export default function PollsPage({ onPollClick }) {
           return opt;
         });
         updatedUserVotes[userId] = optionId;
+
+        // ⭐ 처음 투표한 경우에만 XP 지급
+        if (!previousVote) {
+          addXP("pollVoted");
+        }
+
         toast.success(previousVote ? '투표가 변경되었습니다!' : '투표가 완료되었습니다!');
       }
 
@@ -131,12 +139,10 @@ export default function PollsPage({ onPollClick }) {
   };
 
   const handleDeletePoll = (pollId) => {
-    if (window.confirm('이 투표를 삭제하시겠습니까?')) {
-      const updatedPolls = polls.filter((p) => p.id !== pollId);
-      setPolls(updatedPolls);
-      localStorage.setItem('polls', JSON.stringify(updatedPolls));
-      toast.success('투표가 삭제되었습니다.');
-    }
+    const updatedPolls = polls.filter((p) => p.id !== pollId);
+    setPolls(updatedPolls);
+    localStorage.setItem('polls', JSON.stringify(updatedPolls));
+    toast.success('투표가 삭제되었습니다.');
   };
 
   const filteredPolls = selectedTeam
@@ -162,12 +168,22 @@ export default function PollsPage({ onPollClick }) {
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="bg-gradient-to-br from-teal-500 via-cyan-500 to-sky-500 rounded-2xl p-4 text-white shadow-lg"
+        className="  bg-gradient-to-br
+                from-teal-500 via-cyan-500 to-sky-500
+                dark:bg-gradient-to-br
+                dark:from-teal-400/70
+                dark:via-cyan-400/70
+                dark:to-sky-400/70
+                dark:backdrop-blur-md                      
+                  shadow-inner
+                 rounded-2xl p-4 shadow-lg 
+                  transition-all
+                  text-white"
       >
         {!showCreate ? (
           <button
             onClick={() => setShowCreate(true)}
-            className="w-full flex items-center justify-center gap-2 py-2"
+            className="w-full flex items-center justify-center gap-2 py-2 cursor-pointer"
           >
             <Plus className="w-5 h-5" />
             새 투표 만들기
@@ -220,23 +236,25 @@ export default function PollsPage({ onPollClick }) {
         )}
       </motion.div>
 
-      {filteredPolls.length > 0 ? (
-        filteredPolls.map((poll, index) => (
-          <PollCard
-            key={poll.id}
-            poll={poll}
-            index={index}
-            onVote={handleVote}
-            onDelete={handleDeletePoll}
-            isSelected={selectedPollId === poll.id}
-            onPollClick={onPollClick}
-            currentUser={currentUser} // ✅ context 전달
-          />
-        ))
-      ) : (
-        <p className="text-gray-500 text-center py-10">해당 구단의 투표가 없습니다 ⚾</p>
-      )}
-    </div>
+      {
+        filteredPolls.length > 0 ? (
+          filteredPolls.map((poll, index) => (
+            <PollCard
+              key={poll.id}
+              poll={poll}
+              index={index}
+              onVote={handleVote}
+              onDelete={handleDeletePoll}
+              isSelected={selectedPollId === poll.id}
+              onPollClick={onPollClick}
+              currentUser={currentUser} // ✅ context 전달
+            />
+          ))
+        ) : (
+          <p className="text-gray-500 text-center py-10">해당 구단의 투표가 없습니다 ⚾</p>
+        )
+      }
+    </div >
   );
 }
 
@@ -250,14 +268,25 @@ function PollCard({ poll, index, onVote, onDelete, isSelected, onPollClick, curr
   const opacity = useTransform(x, [-150, 0, 150], [0.5, 1, 0.5]);
   const deleteOpacity = useTransform(x, [-150, -50, 0], [1, 0.5, 0]);
   const isMyPoll = poll.author === currentUser?.username;
+  const isDeletingRef = useRef(false);
 
   const userId = currentUser?.username;
   const userVote = poll.userVotes?.[userId];
 
   const handleDragEnd = (event, info) => {
     setIsDragging(false);
-    if (Math.abs(info.offset.x) > 100 && isMyPoll) onDelete(poll.id);
-    else x.set(0);
+    if (Math.abs(info.offset.x) > 100 && isMyPoll) {
+      if (isDeletingRef.current) return;
+
+      if (window.confirm('이 투표를 삭제하시겠습니까?')) {
+        isDeletingRef.current = true;
+        onDelete(poll.id);
+      } else {
+        x.set(0);
+      }
+    } else {
+      x.set(0);
+    }
   };
 
   const totalVotes = poll.options.reduce((sum, o) => sum + o.votes, 0);
@@ -273,10 +302,10 @@ function PollCard({ poll, index, onVote, onDelete, isSelected, onPollClick, curr
     >
       {isMyPoll && (
         <motion.div
-          className="absolute inset-0 bg-red-500 rounded-2xl flex items-center justify-end px-6"
+          className="absolute inset-0 bg-rose-100 dark:bg-rose-900/30 rounded-2xl flex items-center justify-end px-6"
           style={{ opacity: deleteOpacity }}
         >
-          <Trash2 className="w-6 h-6 text-white" />
+          <Trash2 className="w-6 h-6 text-rose-600 dark:text-rose-400" />
         </motion.div>
       )}
 
@@ -298,7 +327,7 @@ function PollCard({ poll, index, onVote, onDelete, isSelected, onPollClick, curr
             <div className="text-gray-900 dark:text-gray-100">{poll.author}</div>
             <p className="text-gray-500 dark:text-gray-400 text-xs">{poll.timestamp}</p>
           </div>
-          {poll.totalVotes > 50 && <Award className="w-6 h-6 text-yellow-500" />}
+          {isMyPoll && <Award className="w-6 h-6 text-yellow-500" />}
         </div>
 
         {poll.team && (
@@ -330,7 +359,7 @@ function PollCard({ poll, index, onVote, onDelete, isSelected, onPollClick, curr
                   animate={{ width: `${percentage}%` }}
                   transition={{ duration: 1 }}
                   className={`absolute inset-0 ${isWinning
-                    ? 'bg-gradient-to-r from-teal-200 to-cyan-200'
+                    ? 'bg-gradient-to-r from-teal-200 to-cyan-200 dark:from-teal-900/50 dark:to-cyan-900/50'
                     : 'bg-teal-100 dark:bg-teal-900/30'
                     }`}
                 />
@@ -340,7 +369,14 @@ function PollCard({ poll, index, onVote, onDelete, isSelected, onPollClick, curr
                     {isSelected && <Check className="w-4 h-4 text-teal-600" />}
                     {isWinning && poll.totalVotes > 0 && <Zap className="w-4 h-4 text-yellow-500" />}
                   </span>
-                  <span className="text-gray-600 dark:text-gray-400">{percentage}%</span>
+                  <motion.span
+                    className="text-gray-600 dark:text-gray-400"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.8 }}
+                  >
+                    {percentage}%
+                  </motion.span>
                 </div>
               </motion.button>
             );

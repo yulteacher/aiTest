@@ -1,5 +1,4 @@
-// src/components/badges/BadgeWidgetSmall.tsx
-
+// BadgeWidgetSmall.tsx
 import React from "react";
 import BadgeIcon from "./BadgeIcon";
 
@@ -20,7 +19,7 @@ export default function BadgeWidgetSmall({ badgeIds }: Props) {
                 )}
 
                 {badgeIds.slice(0, 5).map((id) => (
-                    <BadgeIcon key={id} id={id} size={48} />
+                    <BadgeIcon key={id} badgeId={id} size="lg" showLabel />
                 ))}
             </div>
         </div>

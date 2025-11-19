@@ -16,7 +16,7 @@ export default function CreatePost({ onCreatePost }: CreatePostProps) {
 
   // ✅ v4 구조에 맞게 수정
   const { currentUser, setCurrentUser, users, setUsers, posts, setPosts } = useLocalData();
-  const { addXP } = useXPSystem(currentUser, setCurrentUser, users, setUsers);
+  const { addXP } = useXPSystem();
 
   const handleSubmit = () => {
     if (!content.trim() || !currentUser) return;
@@ -37,7 +37,7 @@ export default function CreatePost({ onCreatePost }: CreatePostProps) {
     setPosts(updatedPosts); // ✅ 상태 업데이트
     localStorage.setItem("posts", JSON.stringify(updatedPosts));
 
-    addXP("postCreate");
+    addXP("postCreated");
 
     if (onCreatePost) onCreatePost(content, imageUrl || undefined);
 

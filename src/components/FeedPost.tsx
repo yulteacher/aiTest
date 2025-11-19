@@ -1,4 +1,5 @@
 // src/components/FeedPost.tsx
+import { useRef } from "react";
 import { motion, useMotionValue, useTransform } from "framer-motion";
 import { Heart, MessageCircle, Share2, Trash2, Edit2 } from "lucide-react";
 import TeamAvatar from "../components/yului/TeamAvatar";
@@ -6,7 +7,7 @@ import { ImageWithFallback } from "../components/figma/ImageWithFallback";
 import { toast } from "sonner";
 import { Post } from "../types/interfaces";
 import { useAppDataContext } from "../context/AppDataContext";
-
+import TeamLogo from "./yului/TeamLogo";
 interface FeedPostProps {
   post: Post;
   index: number;
@@ -37,8 +38,12 @@ export default function FeedPost({
   ========================================== */
   const x = useMotionValue(0);
   const opacity = useTransform(x, [-100, 0], [1, 0]);
+  const isDraggingRef = useRef(false);
+  const isDeletingRef = useRef(false);
 
   const handleDragEnd = (_event: any, info: any) => {
+    setTimeout(() => { isDraggingRef.current = false; }, 100);
+
     // 🔥 본인 글만 삭제 가능
     if (!isMyPost) {
       x.set(0);
@@ -48,8 +53,14 @@ export default function FeedPost({
 
     // 실제 삭제
     if (info.offset.x < -80) {
-      onDelete?.(post.id);
-      toast.success("게시글이 삭제되었습니다!");
+      if (isDeletingRef.current) return; // 이미 삭제 진행 중이면 무시
+
+      if (window.confirm("이 게시글을 삭제하시겠습니까?")) {
+        isDeletingRef.current = true;
+        onDelete?.(post.id);
+      } else {
+        x.set(0);
+      }
     } else {
       x.set(0);
     }
@@ -58,13 +69,26 @@ export default function FeedPost({
   /* ==========================================
      ❤️ 좋아요
   ========================================== */
+  /* ==========================================
+     ❤️ 좋아요 (동기화 수정)
+  ========================================== */
+  const isLiked = post.likedUserIds?.includes(currentUser?.id || "") || false;
+
   const handleLike = (e: any) => {
     e.stopPropagation();
+    if (!currentUser) return toast.error("로그인이 필요합니다!");
+
+    const currentLiked = post.likedUserIds?.includes(currentUser.id);
+    const newLikedUserIds = currentLiked
+      ? post.likedUserIds?.filter((id) => id !== currentUser.id)
+      : [...(post.likedUserIds || []), currentUser.id];
 
     const updated: Post = {
       ...post,
-      liked: !post.liked,
-      likes: post.liked ? post.likes - 1 : post.likes + 1,
+      likedUserIds: newLikedUserIds,
+      likes: currentLiked ? post.likes - 1 : post.likes + 1,
+      liked: !currentLiked, // deprecated
+      isLiked: !currentLiked, // deprecated
     };
 
     updatePost(updated);
@@ -90,6 +114,7 @@ export default function FeedPost({
      📄 상세 보기
   ========================================== */
   const handleCardClick = (e: any) => {
+    if (isDraggingRef.current) return;
     if (e.target.closest("button")) return; // 버튼 클릭 시 상세 이동 방지
     onPostClick?.(post.id);
   };
@@ -105,16 +130,17 @@ export default function FeedPost({
       {isMyPost && (
         <motion.div
           style={{ opacity }}
-          className="absolute inset-0 flex items-center justify-end pr-6
-          bg-gradient-to-r from-red-600 to-rose-500 text-white font-bold rounded-2xl select-none"
+          className="absolute inset-0 flex items-center justify-end px-6
+          bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 font-bold rounded-2xl select-none"
         >
-          삭제 →
+          <Trash2 className="w-6 h-6" />
         </motion.div>
       )}
 
       {/* 앞쪽 카드 */}
       <motion.div
         drag={isMyPost ? "x" : false}
+        onDragStart={() => { isDraggingRef.current = true; }}
         dragConstraints={{ left: -120, right: 0 }}
         dragElastic={0.2}
         onDragEnd={handleDragEnd}
@@ -144,30 +170,46 @@ export default function FeedPost({
               </div>
             </div>
 
-            {/* 수정 / 삭제 버튼(본인만 가능) */}
-            {isMyPost && (
-              <div className="flex gap-1">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onEdit?.(post);
-                  }}
-                  className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full"
-                >
-                  <Edit2 className="w-4 h-4 text-blue-500" />
-                </button>
 
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onDelete?.(post.id);
-                  }}
-                  className="p-2 hover:bg-red-100 dark:hover:bg-red-900/20 rounded-full"
-                >
-                  <Trash2 className="w-4 h-4 text-rose-500" />
-                </button>
-              </div>
-            )}
+            {/* Right Side: Team Logo + Buttons */}
+            <div className="flex items-center gap-2">
+              {/* 🔥 팀 로고 (내 글일 땐 로고만, 남의 글일 땐 이름+로고) */}
+              {(post.team || post.user?.team) && (
+                <div className="flex items-center gap-2">
+                  {!isMyPost && (
+                    <span className="text-sm text-gray-500 dark:text-gray-400">
+                      {(post.user?.team?.name || post.team?.name) ?? ""}
+                    </span>
+                  )}
+                  <TeamLogo team={post.user?.team || post.team} size="sm" />
+                </div>
+              )}
+
+              {/* 수정 / 삭제 버튼(본인만 가능) */}
+              {isMyPost && (
+                <div className="flex gap-1 ml-1">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onEdit?.(post);
+                    }}
+                    className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full"
+                  >
+                    <Edit2 className="w-4 h-4 text-blue-500" />
+                  </button>
+
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDelete?.(post.id);
+                    }}
+                    className="p-2 hover:bg-red-100 dark:hover:bg-red-900/20 rounded-full"
+                  >
+                    <Trash2 className="w-4 h-4 text-rose-500" />
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* ===============================
@@ -197,10 +239,10 @@ export default function FeedPost({
             {/* 좋아요 */}
             <button
               onClick={handleLike}
-              className={`flex items-center gap-2 ${post.liked ? "text-rose-500" : "text-gray-600 dark:text-gray-400"
+              className={`flex items-center gap-2 ${isLiked ? "text-rose-500" : "text-gray-600 dark:text-gray-400"
                 }`}
             >
-              <Heart className="w-5 h-5" fill={post.liked ? "currentColor" : "none"} />
+              <Heart className="w-5 h-5" fill={isLiked ? "currentColor" : "none"} />
               <span>{post.likes}</span>
             </button>
 
@@ -220,6 +262,6 @@ export default function FeedPost({
           </div>
         </div>
       </motion.div>
-    </motion.div>
+    </motion.div >
   );
 }
